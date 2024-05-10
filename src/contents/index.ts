@@ -8,11 +8,9 @@ export const config: PlasmoCSConfig = {
 let startNode = null
 let endNode = null
 let selectedText = ""
+let startIconNode;
 
 document.addEventListener("click", function (event) {
-  // console.log(event)
-  // if (event.target.id == "copyStartingIcon") return
-  // if (event.target.id == "copyEndingIcon") return
   chrome.storage.local.get("isOn", function (result) {
     if (
       result.isOn == ("true" || true) &&
@@ -43,25 +41,41 @@ function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
     selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
   let startIcon = document.createElement("span")
   startIcon.id = "copyStartingIcon"
-
-  // startIcon.style.padding = "5px"
-  // startIcon.style.borderRadius = "6px"
+  const startFontSize = getFontSizeAtPoint(x, y);
   startIcon.textContent = "["
   startIcon.style.position = "absolute"
   startIcon.style.zIndex = "99999999999999"
-  startIcon.style.backgroundColor = ""
-  startIcon.style.color = "red"
+  startIcon.style.backgroundColor = "yellow"
+  startIcon.style.color = "brown"
+  startIcon.style.fontSize = startFontSize
   startIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
   startIcon.style.cursor = "pointer"
   startIcon.style.left = `${pageX}px`
   startIcon.style.top = `${pageY}px`
-  // document.body.appendChild(startIcon)
-
-  startIcon.remove()
+  startIconNode = startIcon
+  // startIcon.remove()
   startNode = findTextNodeFromPoint(x, y)
   startIcon.onclick = async () => {
     // console.log({ startNode })
   }
+}
+
+function resetAll(){
+  startNode = null
+  endNode = null
+  selectedText = ""
+  startIconNode;
+  let selectionIcons = document.querySelectorAll("#copyEndingIcon")
+  let selectionStartIcons = document.querySelectorAll("#copyStartingIcon")
+  if (selectionIcons)
+    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
+  if (selectionStartIcons)
+    selectionStartIcons.forEach((selectionIcon) => selectionIcon.remove())
+}
+
+function getFontSizeAtPoint(x, y) {
+  const elem = document.elementFromPoint(x, y);
+  return window.getComputedStyle(elem).fontSize;
 }
 
 async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
@@ -71,37 +85,20 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
 
   let endIcon = document.createElement("span")
   endIcon.id = "copyEndingIcon"
-  endIcon.style.padding = "5px 12px"
+  const endFontSize = getFontSizeAtPoint(x, y);
   endIcon.style.borderRadius = "6px"
-  endIcon.textContent = "Copy"
+  endIcon.textContent = "]"
   endIcon.style.position = "absolute"
   endIcon.style.zIndex = "99999999999999"
-  endIcon.style.backgroundColor = "black"
-  endIcon.style.color = "white"
+  endIcon.style.backgroundColor = "yellow"
+  endIcon.style.color = "brown"
+  endIcon.style.fontSize = endFontSize
   endIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
   endIcon.style.cursor = "pointer"
   endIcon.style.left = `${pageX}px`
   endIcon.style.top = `${pageY}px`
-  // document.body.appendChild(endIcon)
-
-  // endIcon.onclick = async () => {
-  //   // endNode = findTextNodeFromPoint(x, y)
-  //   // selectTextBetween()
-  //   startNode = null
-  //   endNode = null
-  //   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-  //     let items = result?.recentlyCopiedItems || "[]"
-  //     items = Array.from(JSON.parse(items))
-  //     if (selectedText === "") return
-  //     items.unshift(selectedText)
-  //     items = items.length > 10 ? items.slice(0, 10) : items
-  //     await chrome.storage.local.set({
-  //       recentlyCopiedItems: JSON.stringify(items)
-  //     })
-  //   })
-  //   removeIcons()
-  // }
-
+  document.body.appendChild(endIcon)
+  document.body.appendChild(startIconNode)
   startNode = null
   endNode = null
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
@@ -115,6 +112,7 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
     })
     await navigator.clipboard.writeText(selectedText)
     alert("Text successfully copied and stored!")
+    resetAll()
   })
 }
 
