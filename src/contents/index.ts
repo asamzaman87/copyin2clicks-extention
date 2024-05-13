@@ -9,25 +9,34 @@ let startNode = null
 let endNode = null
 let selectedText = ""
 let startIconNode;
+let isSelectionCompleted = false
 
 document.addEventListener("click", function (event) {
   chrome.storage.local.get("isOn", function (result) {
     if (
       result.isOn == ("true" || true) &&
-      result.isOn != "false" &&
-      event.altKey
+      result.isOn != "false"
     ) {
-      if (!startNode) {
-        console.log("start")
-        addStartIcon(event.clientX, event.clientY, event.pageX, event.pageY)
-      } else if (startNode) {
-        console.log("end")
-        endNode = findTextNodeFromPoint(event.clientX, event.clientY)
-
-        selectTextBetween()
-        setTimeout(() => {
-          addEndIcon(event.clientX, event.clientY, event.pageX, event.pageY)
-        }, 100)
+      if (event.altKey) {
+        if (isSelectionCompleted) {
+          isSelectionCompleted = false
+          resetAll()
+        }
+        if (!startNode) {
+          console.log("start")
+          addStartIcon(event.clientX, event.clientY, event.pageX, event.pageY)
+        } else if (startNode) {
+          console.log("end")
+          endNode = findTextNodeFromPoint(event.clientX, event.clientY)
+          selectTextBetween()
+          setTimeout(() => {
+            addEndIcon(event.clientX, event.clientY, event.pageX, event.pageY)
+          }, 100)
+        }
+      } else {
+        if (isSelectionCompleted) {
+          resetAll()
+        }
       }
     }
   })
@@ -60,7 +69,70 @@ function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
   }
 }
 
-function resetAll(){
+async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
+  let selectionIcons = document.querySelectorAll("#copyEndingIcon")
+  if (selectionIcons)
+    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
+
+  let rect;
+  const selection = window.getSelection();
+  console.log("selection121212", selection)
+  if (selection.rangeCount > 0) {
+
+    const range = selection.getRangeAt(0);
+    rect = range.getBoundingClientRect();
+    console.log(rect?.left + window?.scrollX, rect?.top + window?.scrollY, "IOPIO", range?.endOffset, range?.startOffset)
+    const startNode = range.startContainer;
+    const startOffset = range.startOffset;
+
+    // const endNode = range.endContainer;
+    // const endOffset = range.endOffset;
+  }
+
+  let endIcon = document.createElement("span")
+  endIcon.id = "copyEndingIcon"
+  const endFontSize = getFontSizeAtPoint(x, y);
+  endIcon.style.borderRadius = "6px"
+  endIcon.textContent = "]"
+  endIcon.style.position = "absolute"
+  endIcon.style.zIndex = "99999999999999"
+  endIcon.style.backgroundColor = "yellow"
+  endIcon.style.color = "brown"
+  endIcon.style.fontSize = endFontSize
+  endIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
+  endIcon.style.cursor = "pointer"
+  // endIcon.style.left = `${rect?.left + window?.scrollX }px`
+  // endIcon.style.top = `${rect?.top + window?.scrollY}px`
+  endIcon.style.left = `${pageX}px`
+  endIcon.style.top = `${pageY}px`
+  document.body.appendChild(endIcon)
+  document.body.appendChild(startIconNode)
+
+
+  startNode = null
+  endNode = null
+  chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
+    let items = result?.recentlyCopiedItems || "[]"
+    items = Array.from(JSON.parse(items))
+    if (selectedText === "") return
+    items.unshift(selectedText)
+    items = items.length > 10 ? items.slice(0, 10) : items
+    await chrome.storage.local.set({
+      recentlyCopiedItems: JSON.stringify(items)
+    })
+    await navigator.clipboard.writeText(selectedText)
+    alert("Text successfully copied and stored!")
+    console.log("SELECTIOJN COMPLETED")
+    isSelectionCompleted = true
+  })
+}
+
+function removeIcons() {
+  document.getElementById("copyStartingIcon")?.remove()
+  document.getElementById("copyEndingIcon")?.remove()
+}
+
+function resetAll() {
   startNode = null
   endNode = null
   selectedText = ""
@@ -78,48 +150,6 @@ function getFontSizeAtPoint(x, y) {
   return window.getComputedStyle(elem).fontSize;
 }
 
-async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
-  let selectionIcons = document.querySelectorAll("#copyEndingIcon")
-  if (selectionIcons)
-    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
-
-  let endIcon = document.createElement("span")
-  endIcon.id = "copyEndingIcon"
-  const endFontSize = getFontSizeAtPoint(x, y);
-  endIcon.style.borderRadius = "6px"
-  endIcon.textContent = "]"
-  endIcon.style.position = "absolute"
-  endIcon.style.zIndex = "99999999999999"
-  endIcon.style.backgroundColor = "yellow"
-  endIcon.style.color = "brown"
-  endIcon.style.fontSize = endFontSize
-  endIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
-  endIcon.style.cursor = "pointer"
-  endIcon.style.left = `${pageX}px`
-  endIcon.style.top = `${pageY}px`
-  document.body.appendChild(endIcon)
-  document.body.appendChild(startIconNode)
-  startNode = null
-  endNode = null
-  chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-    let items = result?.recentlyCopiedItems || "[]"
-    items = Array.from(JSON.parse(items))
-    if (selectedText === "") return
-    items.unshift(selectedText)
-    items = items.length > 10 ? items.slice(0, 10) : items
-    await chrome.storage.local.set({
-      recentlyCopiedItems: JSON.stringify(items)
-    })
-    await navigator.clipboard.writeText(selectedText)
-    alert("Text successfully copied and stored!")
-    resetAll()
-  })
-}
-
-function removeIcons() {
-  document.getElementById("copyStartingIcon")?.remove()
-  document.getElementById("copyEndingIcon")?.remove()
-}
 
 function findTextNodeFromPoint(x: any, y: any) {
   const elem = document.elementsFromPoint(x, y)
@@ -155,7 +185,7 @@ function findTextNodeFromPoint(x: any, y: any) {
         // true
       ) {
         const offset = getTextOffsetInNode(range, x, y)
-        foundNode = { node, offset }
+        foundNode = { node, offset, boundingRect: rect }
         return foundNode
         break
       }
@@ -163,9 +193,9 @@ function findTextNodeFromPoint(x: any, y: any) {
   } while ((node = walker.nextNode()))
 
   if (!startNode) {
-    return { node: nearestFirstNode, offset: 0 }
+    return { node: nearestFirstNode, offset: 0, boundingRect: null }
   } else {
-    return { node: nearestLastNode, offset: nearestLastNode.length }
+    return { node: nearestLastNode, offset: nearestLastNode.length, boundingRect: null }
   }
 }
 
