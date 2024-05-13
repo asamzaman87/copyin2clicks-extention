@@ -24,6 +24,7 @@ document.addEventListener("click", function (event) {
         }
         if (!startNode) {
           console.log("start")
+          startNode = findTextNodeFromPoint(event.clientX, event.clientY)
           addStartIcon(event.clientX, event.clientY, event.pageX, event.pageY)
         } else if (startNode) {
           console.log("end")
@@ -62,8 +63,9 @@ function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
   startIcon.style.left = `${pageX}px`
   startIcon.style.top = `${pageY}px`
   startIconNode = startIcon
+  document.body.appendChild(startIconNode)
   // startIcon.remove()
-  startNode = findTextNodeFromPoint(x, y)
+  // startNode = findTextNodeFromPoint(x, y)
   startIcon.onclick = async () => {
     // console.log({ startNode })
   }
@@ -106,9 +108,6 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
   endIcon.style.left = `${pageX}px`
   endIcon.style.top = `${pageY}px`
   document.body.appendChild(endIcon)
-  document.body.appendChild(startIconNode)
-
-
   startNode = null
   endNode = null
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
@@ -122,7 +121,6 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
     })
     await navigator.clipboard.writeText(selectedText)
     alert("Text successfully copied and stored!")
-    console.log("SELECTIOJN COMPLETED")
     isSelectionCompleted = true
   })
 }
