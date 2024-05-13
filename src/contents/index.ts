@@ -8,8 +8,8 @@ export const config: PlasmoCSConfig = {
 let startNode = null
 let endNode = null
 let selectedText = ""
-let startIconNode;
 let isSelectionCompleted = false
+const bracketsElementClass = "copy-in-click-ext-bracket"
 
 document.addEventListener("click", function (event) {
   chrome.storage.local.get("isOn", function (result) {
@@ -44,89 +44,16 @@ document.addEventListener("click", function (event) {
 })
 
 function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
-  let endIcon = document.querySelector("#copyEndingIcon")
-  if (endIcon) return
-  let selectionIcons = document.querySelectorAll("#copyStartingIcon")
-  if (selectionIcons)
-    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
-  let startIcon = document.createElement("span")
-  startIcon.id = "copyStartingIcon"
-  const startFontSize = getFontSizeAtPoint(x, y);
-  startIcon.textContent = "["
-  startIcon.style.position = "absolute"
-  startIcon.style.zIndex = "99999999999999"
-  startIcon.style.backgroundColor = "yellow"
-  startIcon.style.color = "brown"
-  startIcon.style.fontSize = startFontSize
-  startIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
-  startIcon.style.cursor = "pointer"
-  startIcon.style.left = `${pageX}px`
-  startIcon.style.top = `${pageY}px`
-  startIconNode = startIcon
-  // document.body.appendChild(startIconNode)
-
-  //Start
-  const selectedRange = window.getSelection().getRangeAt(0);
-  const selectedText = selectedRange.toString();
-  const startBracket = "[";
-  const newText = startBracket + selectedText;
-  selectedRange.deleteContents();
-  selectedRange.insertNode(document.createTextNode(newText));
-  //End
-
-  // startIcon.remove()
-  // startNode = findTextNodeFromPoint(x, y)
-  startIcon.onclick = async () => {
-    // console.log({ startNode })
-  }
+  insertBrackets("[")
 }
 
-async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
-  let selectionIcons = document.querySelectorAll("#copyEndingIcon")
-  if (selectionIcons)
-    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
+function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
+  insertBrackets("]")
+  saveCopiedText()
+}
 
-  let rect;
-  const selection = window.getSelection();
-  console.log("selection121212", selection)
-  if (selection.rangeCount > 0) {
 
-    const range = selection.getRangeAt(0);
-    rect = range.getBoundingClientRect();
-    console.log(rect?.left + window?.scrollX, rect?.top + window?.scrollY, "IOPIO", range?.endOffset, range?.startOffset)
-    const startNode = range.startContainer;
-    const startOffset = range.startOffset;
-
-    // const endNode = range.endContainer;
-    // const endOffset = range.endOffset;
-  }
-
-  let endIcon = document.createElement("span")
-  endIcon.id = "copyEndingIcon"
-  const endFontSize = getFontSizeAtPoint(x, y);
-  endIcon.style.borderRadius = "6px"
-  endIcon.textContent = "]"
-  endIcon.style.position = "absolute"
-  endIcon.style.zIndex = "99999999999999"
-  endIcon.style.backgroundColor = "yellow"
-  endIcon.style.color = "brown"
-  endIcon.style.fontSize = endFontSize
-  endIcon.style.transition = "opacity 0.3s ease, transform 0.3s ease"
-  endIcon.style.cursor = "pointer"
-  // endIcon.style.left = `${rect?.left + window?.scrollX }px`
-  // endIcon.style.top = `${rect?.top + window?.scrollY}px`
-  endIcon.style.left = `${pageX}px`
-  endIcon.style.top = `${pageY}px`
-
-  //Start
-  const selectedRange = window.getSelection().getRangeAt(0);
-  const endBracket = document.createTextNode("]");
-  selectedRange.collapse(false); // Move cursor to the end of selection
-  selectedRange.insertNode(endBracket);
-  //End
-
-  startNode = null
-  endNode = null
+async function saveCopiedText() {
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
     let items = result?.recentlyCopiedItems || "[]"
     items = Array.from(JSON.parse(items))
@@ -137,34 +64,32 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
       recentlyCopiedItems: JSON.stringify(items)
     })
     await navigator.clipboard.writeText(selectedText)
-    alert("Text successfully copied and stored!")
     isSelectionCompleted = true
+    alert("Text successfully copied and stored!")
   })
 }
 
-function removeIcons() {
-  document.getElementById("copyStartingIcon")?.remove()
-  document.getElementById("copyEndingIcon")?.remove()
+function insertBrackets(textContent: string) {
+  const selectedRange = window.getSelection().getRangeAt(0);
+  const startBracket = document.createElement("span");
+  startBracket.classList.add(bracketsElementClass);
+  startBracket.textContent = textContent;
+  if (textContent === '[') {
+    selectedRange.deleteContents();
+  } else {
+    selectedRange.collapse(false); // Move cursor to the end of selection
+  }
+  selectedRange.insertNode(startBracket);
 }
 
 function resetAll() {
   startNode = null
   endNode = null
   selectedText = ""
-  startIconNode;
-  let selectionIcons = document.querySelectorAll("#copyEndingIcon")
-  let selectionStartIcons = document.querySelectorAll("#copyStartingIcon")
-  if (selectionIcons)
-    selectionIcons.forEach((selectionIcon) => selectionIcon.remove())
-  if (selectionStartIcons)
-    selectionStartIcons.forEach((selectionIcon) => selectionIcon.remove())
+  let bracket = document.querySelectorAll(`.${bracketsElementClass}`)
+  if (bracket)
+    bracket.forEach((bracket) => bracket.remove())
 }
-
-function getFontSizeAtPoint(x, y) {
-  const elem = document.elementFromPoint(x, y);
-  return window.getComputedStyle(elem).fontSize;
-}
-
 
 function findTextNodeFromPoint(x: any, y: any) {
   const elem = document.elementsFromPoint(x, y)
@@ -241,34 +166,41 @@ function selectTextBetween() {
   const range = document.createRange()
   const selection = window.getSelection()
   selection.removeAllRanges() // Clear existing selections
-
-  // console.log({ startNode, endNode })
   if (startNode && endNode && startNode.node && endNode.node) {
     const startDomNode = startNode.node
     const endDomNode = endNode.node
-    // console.log({ startDomNode, endDomNode })
-
     // Determine the correct document order
     const documentOrder = startDomNode.compareDocumentPosition(endDomNode)
-    // console.log({ documentOrder })
     const isStartBeforeEnd =
       documentOrder == Node.DOCUMENT_POSITION_FOLLOWING ||
       (documentOrder == 0 && startNode.offset < endNode.offset) ||
-      // (documentOrder == 2 && startNode.offset < endNode.offset) ||
       (documentOrder == 20 && startNode.offset < endNode.offset)
 
     if (isStartBeforeEnd) {
-      range.setStart(startDomNode, startNode.offset)
+      // Set start offset to the first character after '[' bracket
+      const startOffset = startNode.node.textContent.indexOf("[") + 1;
+      range.setStart(startDomNode, startNode.offset + startOffset)
       range.setEnd(endDomNode, endNode.offset)
     } else {
-      range.setStart(endDomNode, endNode.offset)
+      // Set start offset to the first character after '[' bracket
+      const startOffset = endNode.node.textContent.indexOf("[") + 1;
+      range.setStart(endDomNode, endNode.offset + startOffset)
       range.setEnd(startDomNode, startNode.offset)
     }
     console.log({ range })
     selection.addRange(range) // Add the new range to the current selection
-    selectedText = range.toString()
-    // console.log(selection.toString())
+    selectedText = removeBracketAndContentWithin10Chars(range.toString());
   } else {
     console.log("Invalid start or end node for selection")
   }
 }
+
+function removeBracketAndContentWithin10Chars(text: string) {
+  // Define a regular expression pattern to match the first "[" and the content before it within 10 characters
+  var pattern = /^(.{0,20}?)\[/;
+
+  // Use replace() method to substitute the matched pattern with the captured group
+  var result = text.replace(pattern, '');
+  return result.trim();
+}
+
