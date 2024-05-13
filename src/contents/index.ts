@@ -63,7 +63,19 @@ function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
   startIcon.style.left = `${pageX}px`
   startIcon.style.top = `${pageY}px`
   startIconNode = startIcon
-  document.body.appendChild(startIconNode)
+  // document.body.appendChild(startIconNode)
+   //Start
+   const selectedRange = window.getSelection().getRangeAt(0);
+   const selectedText = selectedRange.toString();
+   const startBracket = "[";
+  //  const endBracket = "]";
+   const newText = startBracket + selectedText;
+  //  const newText =  selectedText + endBracket;
+ 
+   selectedRange.deleteContents();
+   selectedRange.insertNode(document.createTextNode(newText));
+ 
+   //End
   // startIcon.remove()
   // startNode = findTextNodeFromPoint(x, y)
   startIcon.onclick = async () => {
@@ -107,7 +119,22 @@ async function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
   // endIcon.style.top = `${rect?.top + window?.scrollY}px`
   endIcon.style.left = `${pageX}px`
   endIcon.style.top = `${pageY}px`
-  document.body.appendChild(endIcon)
+  // document.body.appendChild(endIcon)
+
+
+  //Start
+  const selectedRange = window.getSelection().getRangeAt(0);
+  const selectedText = selectedRange.toString();
+  // const startBracket = "[";
+  const endBracket = "]";
+  // const newText = startBracket + selectedText + endBracket;
+  const newText =  selectedText + endBracket;
+
+  selectedRange.deleteContents();
+  selectedRange.insertNode(document.createTextNode(newText));
+
+  //End
+
   startNode = null
   endNode = null
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
