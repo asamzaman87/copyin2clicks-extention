@@ -10,11 +10,13 @@ let endNode = null
 let selectedText = ""
 let isSelectionCompleted = false
 const bracketsElementClass = "copy-in-click-ext-bracket"
+let blinkingInterval;
 
 document.addEventListener("click", function (event) {
   chrome.storage.local.get("isOn", function (result) {
     if (
-      result.isOn == ("true" || true) &&
+      result.isOn ||
+      result.isOn == "true" &&
       result.isOn != "false"
     ) {
       if (event.altKey) {
@@ -30,14 +32,13 @@ document.addEventListener("click", function (event) {
           console.log("end")
           endNode = findTextNodeFromPoint(event.clientX, event.clientY)
           selectTextBetween()
-          setTimeout(() => {
-            addEndIcon(event.clientX, event.clientY, event.pageX, event.pageY)
-          }, 100)
+          addEndIcon(event.clientX, event.clientY, event.pageX, event.pageY)
         }
       } else {
-        if (isSelectionCompleted) {
+        console.log("RESETTED!")
+        // if (isSelectionCompleted) {
           resetAll()
-        }
+        // }
       }
     }
   })
@@ -49,7 +50,7 @@ function addStartIcon(x: any, y: any, pageX: any, pageY: any) {
 
 function addEndIcon(x: any, y: any, pageX: any, pageY: any) {
   insertBrackets("]")
-  saveCopiedText()
+  setTimeout(() => saveCopiedText(), 500)
 }
 
 
@@ -65,6 +66,7 @@ async function saveCopiedText() {
     })
     await navigator.clipboard.writeText(selectedText)
     isSelectionCompleted = true
+    resetAll()
     alert("Text successfully copied and stored!")
   })
 }
@@ -73,6 +75,7 @@ function insertBrackets(textContent: string) {
   const selectedRange = window.getSelection().getRangeAt(0);
   const startBracket = document.createElement("span");
   startBracket.classList.add(bracketsElementClass);
+  // startBracket.style.animation = 'fading 2s infinite';
   startBracket.textContent = textContent;
   if (textContent === '[') {
     selectedRange.deleteContents();
@@ -80,6 +83,11 @@ function insertBrackets(textContent: string) {
     selectedRange.collapse(false); // Move cursor to the end of selection
   }
   selectedRange.insertNode(startBracket);
+  var visible = true;
+  blinkingInterval = setInterval(function() {
+    startBracket.style.opacity = visible ? "0.2" : "1";
+    visible = !visible;
+  }, 600); 
 }
 
 function resetAll() {
@@ -89,6 +97,7 @@ function resetAll() {
   let bracket = document.querySelectorAll(`.${bracketsElementClass}`)
   if (bracket)
     bracket.forEach((bracket) => bracket.remove())
+  clearInterval(blinkingInterval);
 }
 
 function findTextNodeFromPoint(x: any, y: any) {

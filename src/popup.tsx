@@ -7,7 +7,6 @@ import Container from "~components/Container"
 import Footer from "~components/Footer"
 import Header from "~components/Header"
 import Tooltip from "~components/Tooltip"
-
 import "~style.css"
 
 function IndexPopup() {
@@ -24,7 +23,7 @@ function IndexPopup() {
         <Container />
         <Footer />
       </main>
-      {alert && <Tooltip text={alert} />}
+      {alert && <Tooltip  text={alert} />}
     </div>
   )
 }

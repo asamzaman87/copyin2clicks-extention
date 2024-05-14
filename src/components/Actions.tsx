@@ -1,13 +1,11 @@
-import React, { useState } from "react"
+import React from "react"
 import { AiOutlineCloseCircle } from "react-icons/ai"
 import { HiOutlineDocumentDownload } from "react-icons/hi"
 import { IoMdOpen } from "react-icons/io"
 import { MdContentCopy } from "react-icons/md"
-
+import ReactToolTip from './ReactToolTip'
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
-
-import Tooltip from "./Tooltip"
 
 function Actions({ text }) {
   const storage = new Storage({ area: "local" })
@@ -67,26 +65,38 @@ function Actions({ text }) {
 
   return (
     <div className="actions flex gap-0.5 self-end ">
-      <MdContentCopy
-        onClick={onCopyToClipboard.bind(this, text)}
-        title="Copy"
-        className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100"
-      />
-      <HiOutlineDocumentDownload
-        onClick={onDownload.bind(this, text)}
-        title={extension ? "Download" : "Please set file extension!"}
-        className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 ${!extension && "hover:scale-100 hover:cursor-default text-gray-400"}`}
-      />
-      <IoMdOpen
-        onClick={onOpenInNewTab.bind(this, text)}
-        title="Open in new Tab"
-        className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
-      />
-      <AiOutlineCloseCircle
-        onClick={onRemove.bind(this, text)}
-        title="Remove"
-        className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
-      />
+      <div>
+        <MdContentCopy
+          id="copy-ext-icon"
+          onClick={onCopyToClipboard.bind(this, text)}
+          className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100"
+        />
+        <ReactToolTip text={"copy"} anchorSelect={"copy-ext-icon"} />
+      </div>
+      <div>
+        <HiOutlineDocumentDownload
+          onClick={onDownload.bind(this, text)}
+          id="download-ext-icon"
+          className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 ${!extension && "hover:scale-100 hover:cursor-default text-gray-400"}`}
+        />
+        <ReactToolTip text={extension ? "Download" : "Please set file extension!"} anchorSelect={"download-ext-icon"} />
+      </div>
+      <div>
+        <IoMdOpen
+          onClick={onOpenInNewTab.bind(this, text)}
+          id="new-tab-ext-icon"
+          className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
+        />
+        <ReactToolTip text={"Open in new Tab"} anchorSelect={"new-tab-ext-icon"} />
+      </div>
+      <div>
+        <AiOutlineCloseCircle
+          id="remove-ext-icon"
+          onClick={onRemove.bind(this, text)}
+          className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
+        />
+        <ReactToolTip text={"Remove"} anchorSelect={"remove-ext-icon"} />
+      </div>
     </div>
   )
 }

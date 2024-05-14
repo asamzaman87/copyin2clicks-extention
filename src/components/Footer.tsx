@@ -4,6 +4,7 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
 import Tooltip from "./Tooltip"
+import { NOEXTENTION } from 'src/utils/constants'
 
 function Footer() {
   const [extension, setExtension] = useState("txt")
@@ -22,6 +23,13 @@ function Footer() {
     setExtension(e.target.value)
   }
   function onSave() {
+    if (!extension) {
+      setToolTip(NOEXTENTION)
+      setTimeout(() => {
+        setToolTip("")
+      }, 1000)
+      return;
+    }
     setTxt(extension)
     handleAlert()
   }

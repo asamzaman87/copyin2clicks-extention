@@ -20,6 +20,9 @@ dependencies:
   react-icons:
     specifier: ^5.1.0
     version: 5.1.0(react@18.2.0)
+  react-tooltip:
+    specifier: ^5.26.4
+    version: 5.26.4(react-dom@18.2.0)(react@18.2.0)
   tailwindcss:
     specifier: 3.4.1
     version: 3.4.1
@@ -445,6 +448,23 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       cross-spawn: 7.0.3
+    dev: false
+
+  /@floating-ui/core@1.6.1:
+    resolution: {integrity: sha512-42UH54oPZHPdRHdw6BgoBD6cg/eVTmVrFcgeRDM3jbO7uxSoipVcmcIGFcA5jmOHO5apcyvBhkSKES3fQJnu7A==}
+    dependencies:
+      '@floating-ui/utils': 0.2.2
+    dev: false
+
+  /@floating-ui/dom@1.6.5:
+    resolution: {integrity: sha512-Nsdud2X65Dz+1RHjAIP0t8z5e2ff/IRbei6BqFrl1urT8sDVzM1HMQ+R0XcU5ceRfyO3I6ayeqIfh+6Wb8LGTw==}
+    dependencies:
+      '@floating-ui/core': 1.6.1
+      '@floating-ui/utils': 0.2.2
+    dev: false
+
+  /@floating-ui/utils@0.2.2:
+    resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
     dev: false
 
   /@ianvs/prettier-plugin-sort-imports@4.1.1(prettier@3.2.4):
@@ -3113,6 +3133,10 @@ packages:
     engines: {node: '>=6.0'}
     dev: false
 
+  /classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
+    dev: false
+
   /cli-cursor@3.1.0:
     resolution: {integrity: sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw==}
     engines: {node: '>=8'}
@@ -5120,6 +5144,18 @@ packages:
   /react-refresh@0.9.0:
     resolution: {integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==}
     engines: {node: '>=0.10.0'}
+    dev: false
+
+  /react-tooltip@5.26.4(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-5WyDrsfw1+6qNVSr3IjqElqJ+cCwE8+44b+HpJ8qRLv7v0a3mcKf8wvv+NfgALFS6QpksGFqTLV2JQ60c+okZQ==}
+    peerDependencies:
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
+    dependencies:
+      '@floating-ui/dom': 1.6.5
+      classnames: 2.5.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react@18.2.0:

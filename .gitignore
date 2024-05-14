@@ -1,4 +1,5 @@
 node_modules
 .plasmo
 build/chrome-mv3-dev
+build/chrome-mv3-prod
 build/firefox-mv2-dev
