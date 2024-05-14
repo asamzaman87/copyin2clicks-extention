@@ -12,6 +12,53 @@ let isSelectionCompleted = false
 const bracketsElementClass = "copy-in-click-ext-bracket"
 let blinkingInterval;
 
+const renderPopup = () => {
+
+  function closePopup() {
+    popup.style.opacity = "0";
+    setTimeout(() => {
+      popup.remove();
+    }, 300)
+  }
+
+  const popup = document.createElement("div");
+  popup.style.cssText = `
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #ffffff;
+      z-index: 999999;
+      border-radius: 8px;
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+      opacity: 0;
+      transition: opacity 0.2s ease; 
+    `;
+
+  // Add content to the popup
+  const primaryColor = '#3c82f6'
+  const crossStyles = `padding:8px;display:flex;justify-content:end;background:${primaryColor};border-top-left-radius:6px;border-top-right-radius:6px;color:white;font-weight:bolder;`
+  const buttonStyles = `border:1px solid ${primaryColor};border-radius:6px;padding:4px 8px;background:${primaryColor};color:white;cursor:pointer;font-weight:bold;`
+  popup.innerHTML = `
+      <div>
+        <div style="${crossStyles}" ><span id="cross" style="cursor:pointer;" >&#x2717;</span></div>
+        <div style="padding: 20px;">
+          <div style="padding:4px;color:black;font-weight:bold;" >Text successfully copied and stored!</div>
+          <div style="display:flex;justify-content:end;margin-top:16px" >
+            <button id="closeButton" style="${buttonStyles}" >OK</button>
+          </div>
+        </div>
+      </div>
+    `;
+  document.body.appendChild(popup);
+  popup.offsetHeight;
+  popup.style.opacity = "1";
+  const closeButton = popup.querySelector("#closeButton");
+  const crossButton = popup.querySelector("#cross");
+  closeButton.addEventListener("click", closePopup);
+  crossButton.addEventListener("click", closePopup);
+}
+
 document.addEventListener("click", function (event) {
   chrome.storage.local.get("isOn", function (result) {
     if (
@@ -37,7 +84,7 @@ document.addEventListener("click", function (event) {
       } else {
         console.log("RESETTED!")
         // if (isSelectionCompleted) {
-          resetAll()
+        resetAll()
         // }
       }
     }
@@ -67,7 +114,7 @@ async function saveCopiedText() {
     await navigator.clipboard.writeText(selectedText)
     isSelectionCompleted = true
     resetAll()
-    alert("Text successfully copied and stored!")
+    setTimeout(() => renderPopup(), 500)
   })
 }
 
@@ -84,10 +131,10 @@ function insertBrackets(textContent: string) {
   }
   selectedRange.insertNode(startBracket);
   var visible = true;
-  blinkingInterval = setInterval(function() {
+  blinkingInterval = setInterval(function () {
     startBracket.style.opacity = visible ? "0.2" : "1";
     visible = !visible;
-  }, 600); 
+  }, 600);
 }
 
 function resetAll() {
