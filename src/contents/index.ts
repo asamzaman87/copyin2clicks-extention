@@ -18,6 +18,7 @@ const renderPopup = () => {
       popup.style.opacity = "0";
       setTimeout(() => {
         popup.remove();
+        window.getSelection().removeAllRanges();
       }, 300)
     }
 
