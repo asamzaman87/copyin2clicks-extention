@@ -14,13 +14,13 @@ let blinkingInterval;
 
 const renderPopup = () => {
 
-    function closePopup() {
-      popup.style.opacity = "0";
-      setTimeout(() => {
-        popup.remove();
-        window.getSelection().removeAllRanges();
-      }, 300)
-    }
+  function closePopup() {
+    popup.style.opacity = "0";
+    setTimeout(() => {
+      popup.remove();
+      window.getSelection().removeAllRanges();
+    }, 300)
+  }
 
   const popup = document.createElement("div");
   popup.style.cssText = `
@@ -38,7 +38,6 @@ const renderPopup = () => {
 
   // Add content to the popup
   const primaryColor = '#3c82f6'
-  const crossStyles = `padding:8px;display:flex;justify-content:end;background:${primaryColor};border-top-left-radius:6px;border-top-right-radius:6px;color:white;font-weight:bolder;`
   const buttonStyles = `border:1px solid ${primaryColor};border-radius:6px;padding:4px 40px;background:${primaryColor};color:white;cursor:pointer;font-weight:bold;`
   popup.innerHTML = `
       <div>
