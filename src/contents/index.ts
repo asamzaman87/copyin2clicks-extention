@@ -14,7 +14,23 @@ let blinkingInterval;
 
 const renderPopup = () => {
 
+  // Create overlay
+  const overlay = document.createElement("div");
+  overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999998; /* Place it below the popup */
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    `;
+  document.body.appendChild(overlay);
+
   function closePopup() {
+    // Remove overlay
+    overlay.remove();
+
     popup.style.opacity = "0";
     setTimeout(() => {
       popup.remove();
@@ -63,9 +79,13 @@ const renderPopup = () => {
   popup.offsetHeight;
   popup.style.opacity = "1";
   const closeButton = popup.querySelector("#closeButton");
-  // const crossButton = popup.querySelector("#cross");
   closeButton.addEventListener("click", closePopup);
-  // crossButton.addEventListener("click", closePopup);
+
+  // Prevent clicks on the overlay from propagating to elements below
+  overlay.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
 }
 
 document.addEventListener("click", function (event) {
