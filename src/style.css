@@ -65,3 +65,72 @@
     left: 30%;
   }
 }
+.clickable {
+  pointer-events: auto;
+}
+
+.no-focus-outline:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.input-black-placeholder::placeholder {
+  color: black;
+  opacity: 1; /* Ensures the color is not affected by default opacity */
+}
+
+/* for pinned extension instrcution  */
+
+.instruction-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.instruction-content {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-content .icon {
+  width: 16px;
+  vertical-align: middle;
+}
+
+.instruction-content .instruction-image {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+.instruction-content .button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.select-custom {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png);
+  background-size: 0.6rem;
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}

@@ -1,17 +1,28 @@
-import { Tooltip } from 'react-tooltip'
+import { Tooltip, type PlacesType } from "react-tooltip";
 
 interface IReactToolTip {
-    text: string;
-    anchorSelect: string;
-    clickable?: boolean
+  text: string;
+  anchorSelect: string;
+  clickable?: boolean;
+  place: string;
 }
 
-export default function ReactToolTip({ text, anchorSelect, clickable = true }: IReactToolTip) {
-    return (
-        <>
-            <Tooltip className="active:scale-95" anchorSelect={`#${anchorSelect}`} clickable={clickable}>
-                {text}
-            </Tooltip>
-        </>
-    )
+export default function ReactToolTip({
+  text,
+  anchorSelect,
+  clickable = true,
+  place,
+}: IReactToolTip) {
+  return (
+    <>
+      <Tooltip
+        className="react-tooltip"
+        // className="active:scale-95"
+        anchorSelect={anchorSelect}
+        clickable={clickable}
+        content={text}
+        place={place}
+      ></Tooltip>
+    </>
+  );
 }

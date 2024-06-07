@@ -1,5 +1,7 @@
-const NOEXTENTION = 'No File Extention Found !'
+const NOEXTENTION = 'Error: Empty Extension Input Field Detected!'
+const INVALID_EXTENSION = "Invalid File Extension!";
 
 export {
-    NOEXTENTION
+    NOEXTENTION,
+    INVALID_EXTENSION
 }

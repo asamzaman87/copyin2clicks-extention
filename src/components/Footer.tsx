@@ -1,64 +1,123 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
+import { Storage } from "@plasmohq/storage";
+import { useStorage } from "@plasmohq/storage/hook";
+import { NOEXTENTION, INVALID_EXTENSION } from "src/utils/constants";
+import Tooltip from "./Tooltip"; 
 
-import { Storage } from "@plasmohq/storage"
-import { useStorage } from "@plasmohq/storage/hook"
-
-import Tooltip from "./Tooltip"
-import { NOEXTENTION } from 'src/utils/constants'
+const validExtensions = [
+  "txt",
+  "doc",
+  "pdf",
+  "csv",
+  "xml",
+  "html",
+  "xhtml",
+  "css",
+  "js",
+  "jsx",
+  "json",
+  "yaml",
+  "yml",
+  "log",
+  "md",
+  "rtf",
+  "ini",
+  "cfg",
+  "sql",
+  "sh",
+  "py",
+  "java",
+  "c",
+  "cpp",
+  "cs",
+  "php",
+  "pl",
+  "rb",
+  "docx",
+  "odt",
+  "ppt",
+  "pptx",
+  "xls",
+  "xlsx",
+];
 
 function Footer() {
-  const [extension, setExtension] = useState("txt")
+  const [extension, setExtension] = useState("");
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const storage = new Storage({ area: "local" })
-  let [txt, setTxt] = useStorage({ key: "extension", instance: storage }, "txt")
+  const storage = new Storage({ area: "local" });
+  let [txt, setTxt] = useStorage({ key: "extension", instance: storage }, "");
   const [toolTip, setToolTip] = useStorage(
     { key: "alert", instance: storage },
     ""
-  )
+  );
+
   useEffect(() => {
-    setExtension(txt)
-  }, [txt])
+    setExtension(txt);
+  }, [txt]);
 
-  function setExtensionFunc(e: React.ChangeEvent<HTMLInputElement>) {
-    setExtension(e.target.value)
+  function isValidExtension(ext) {
+    return validExtensions.includes(ext);
   }
-  function onSave() {
-    if (!extension) {
-      setToolTip(NOEXTENTION)
-      setTimeout(() => {
-        setToolTip("")
-      }, 1000)
-      return;
+
+  function setExtensionFunc(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newValue = e.target.value.trim().toLowerCase();
+    if (newValue === "") {
+      setTxt(""); // Clear the storage value if input is empty
+      setExtension(""); // Clear the extension value
+    } else {
+      setExtension(newValue);
+      onSave(newValue);
     }
-    setTxt(extension)
-    handleAlert()
   }
 
-  function handleAlert() {
-    setToolTip(`File extension set to .${extension}!`)
+  function onSave(ext) {
+    if (!ext) {
+      setToolTip(NOEXTENTION);
+      setShowTooltip(true);
+    } else if (!isValidExtension(ext)) {
+      setToolTip(
+        `${INVALID_EXTENSION} E.g: ${validExtensions.slice(0, 5).join(", ")}.`
+      );
+      setShowTooltip(true);
+    } else {
+      setTxt(ext);
+      handleAlert(ext);
+    }
     setTimeout(() => {
-      setToolTip("")
-    }, 1000)
+      setToolTip("");
+      setShowTooltip(false);
+    }, 1000);
+  }
+
+  function handleAlert(ext) {
+    setToolTip(`File Extension Set to .${ext}!`);
+    setShowTooltip(true);
+    setTimeout(() => {
+      setToolTip("");
+      setShowTooltip(false);
+    }, 1000);
   }
 
   return (
     <div className="p-2 pb-0 flex justify-center">
-      <div className="flex gap-1 ">
-        <input
-          className="border-2 text-center text-sm font-semibold text-gray-500 border-gray-400 rounded-md p-2 w-24"
-          type="text"
+      <div className="flex gap-1">
+        <select
+          className={`${extension ? "w-24" : 'w-40'} text-center p-1.5 border text-sm font-semibold text-black border-black rounded-md  no-focus-outline select-custom`}
           value={extension}
           onChange={setExtensionFunc}
-          placeholder="E.g. txt"
-        />
-        <button
-          onClick={onSave}
-          className="border-2 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white rounded-md p-2 cursor-pointer">
-          Set File Extension
-        </button>
+        >
+          <option value="">Select Extension</option>
+          {validExtensions.map((ext) => (
+            <option key={ext} value={ext}>
+              {ext}
+            </option>
+          ))}
+        </select>
       </div>
+      {showTooltip && <Tooltip text={toolTip} />}
     </div>
-  )
+  );
 }
 
-export default Footer
+export default Footer;
