@@ -48,7 +48,7 @@ const mimeTypes = {
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
-function Actions({ text, index, starred, toggleStar, showActions }) {
+function Actions({ text, index, starred, toggleStar, showActions, userData }) {
   const storage = new Storage({ area: "local" });
   let [extension] = useStorage({ key: "extension", instance: storage });
   const [toolTip, setToolTip] = useStorage(
@@ -57,14 +57,25 @@ function Actions({ text, index, starred, toggleStar, showActions }) {
   );
 
   async function onCopyToClipboard(text: string) {
-    setToolTip("Copied!");
+    if(!userData.stripeSubscriptionId){
+    setToolTip("Text has been copied to clipboard. Click on the CopyIn2Clicks extension to view!  Want to keep the original formatting? Click here to learn how to upgrade and enjoy enhanced copying features!");
+    }else{
+      setToolTip('Copied')
+    }
     setTimeout(() => {
       setToolTip("");
-    }, 500);
+    }, 1500);
     navigator.clipboard.writeText(text);
   }
 
   const onDownload = (text) => {
+    if(!userData?.stripeSubscriptionId){
+      setToolTip("Upgrade Premium To Download!")
+      setTimeout(() => {
+        setToolTip("");
+      }, 500);
+      return;
+    }
     if (!extension) {
       setToolTip("Please Set File Extension!");
       setTimeout(() => {
@@ -210,7 +221,7 @@ startxref
         <HiOutlineDocumentDownload
           onClick={onDownload.bind(this, text)}
           id="download-ext-icon"
-          className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline ${!extension && "hover:scale-100 hover:cursor-default text-gray-400"}`}
+          className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline ${!extension  &&  "hover:scale-100 hover:cursor-default text-gray-400"}`}
         />
         <ReactToolTip
           text={extension ? "Download" : "Please Set File Extension!"}

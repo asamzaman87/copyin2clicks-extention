@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import Actions from "./Actions";
 
-function Item({ text, index, starred, toggleStar }) {
+function Item({ text, index, starred, toggleStar, userData }) {
   const [showActions, setShowActions] = useState(false);
   function showActionsFunc(action: boolean, id: string) {
     setShowActions(action);
@@ -23,6 +23,7 @@ function Item({ text, index, starred, toggleStar }) {
             starred={starred}
             toggleStar={toggleStar}
             showActions= {showActions}
+            userData={userData}
           />
       </div>
     </>

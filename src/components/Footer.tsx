@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import { NOEXTENTION, INVALID_EXTENSION } from "src/utils/constants";
-import Tooltip from "./Tooltip"; 
+import Tooltip from "./Tooltip";
+import { FaUserPlus } from "react-icons/fa";
 
 const validExtensions = [
   "txt",
@@ -41,7 +42,7 @@ const validExtensions = [
   "xlsx",
 ];
 
-function Footer() {
+function Footer({ userData }) {
   const [extension, setExtension] = useState("");
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -101,14 +102,20 @@ function Footer() {
 
   return (
     <div className="p-2 pb-0 flex justify-center">
+      {/* <div className="flex justify-start items-center gap-2">
+        <FaUserPlus className="text-blue-400" size={25} />
+        <span className="text-sm font-semibold">
+          {userData?.name || "Login"}
+        </span>
+      </div> */}
       <div className="flex gap-1">
         <select
-          className={`${extension ? "w-24" : 'w-40'} text-center p-1.5 border text-sm font-semibold text-black border-black rounded-md  no-focus-outline select-custom`}
+          className={`${extension ? "w-24" : "w-40"} text-center p-1.5 border text-sm font-semibold text-black border-black rounded-md  no-focus-outline select-custom`}
           value={extension}
           onChange={setExtensionFunc}
         >
           <option value="">Select Extension</option>
-          {validExtensions.map((ext) => (
+          {validExtensions?.map((ext) => (
             <option key={ext} value={ext}>
               {ext}
             </option>

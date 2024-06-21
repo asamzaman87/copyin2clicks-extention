@@ -8,35 +8,45 @@ import Footer from "~components/Footer";
 import Header from "~components/Header";
 import Tooltip from "~components/Tooltip";
 import "~style.css";
-// import Instructions from "~components/Instruction"
 
 function IndexPopup() {
   const storage = new Storage({ area: "local" });
+  const [error, setError] = useState(null);
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
-  // const [showInstructions, setShowInstructions] = useState(false);
+// const [userData , setUserData]= useStorage({key : 'userData' , instance: storage }, [])
+const [userData , setUserData] = useState([])
+// console.log('userData',userData)
 
+
+  const fetchUserData = () => {
+    chrome.storage.sync.get( function (items) {
+      chrome.runtime.sendMessage(
+        { action: "fetchUserData" },
+        function (response) {
+          if (response.error) {
+            setError(response.error);
+            setUserData(null);
+          } else {
+            setError(null);
+            console.log('response', response)
+            setUserData(response);
+          }
+        }
+      );
+    });
+  };
   useEffect(() => {
     setAlert("");
+    fetchUserData();
   }, []);
-
-  // useEffect(() => {
-  //   chrome.runtime.onInstalled.addListener(() => {
-  //     setShowInstructions(true);
-  //   });
-  // }, []);
-
-  // const handleClose = () => {
-  //   setShowInstructions(false);
-  // };
 
   return (
     <>
-      {/* {showInstructions && <Instructions onClose={handleClose} />} */}
       <div className="w-[450px] min-h-[100px] max-h-[450px]">
-        <Header />
+        <Header userData={userData}/>
         <main className="p-2">
-          <Container />
-          <Footer />
+          <Container userData = {userData}/>
+          <Footer userData={userData}/>
         </main>
         {alert && <Tooltip text={alert} />}
       </div>

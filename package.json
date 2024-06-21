@@ -13,6 +13,7 @@
     "firefox-package": "plasmo package --target=firefox-mv2"
   },
   "dependencies": {
+    "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.10.0",
     "plasmo": "0.85.2",
     "react": "18.2.0",
@@ -37,7 +38,8 @@
     ],
     "permissions": [
       "storage",
-      "downloads"
+      "downloads",
+      "scripting"
     ]
   }
 }
