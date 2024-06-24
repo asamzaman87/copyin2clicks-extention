@@ -380,31 +380,38 @@ async function saveCopiedText(hasText = "", target = null) {
   const isSubscribed = userData?.stripeSubscriptionId;
 
   let targetElement = target;
+
   // Function to count words in a string
   function countWords(text) {
     return text.split(/\s+/).length;
   }
+
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
     let items = result?.recentlyCopiedItems || "[]";
     items = Array.from(JSON.parse(items));
-    const maxItems = 15; // Limit to 15 items for all users
-    if (items.length >= maxItems) {
-      return; // No need for upgrade popup
-    }
+    const maxItems = isSubscribed ? 15 : 5; // Limit to 15 items for subscribed users, 5 for free users
 
     if (selectedText === "" && !hasText) return;
+
     const maxWords = 500;
     const textToCopy = hasText || selectedText;
+
     if (countWords(textToCopy) > maxWords && !isSubscribed) {
       renderUpgradePopup(
-        "Free tier in CopyIn2Clicks is limited to 300 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/> ✨ Click here to enjoy unlimited copying today! ✨",
+        "Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/> ✨ Click here to enjoy unlimited copying today! ✨",
         true
       );
       return;
     }
+
     const newItem = { text: hasText || selectedText, starred: false };
     items.unshift(newItem);
-    items = items.slice(0, maxItems);
+
+    // If user is not subscribed and the items exceed the limit, remove the oldest items
+    if (!isSubscribed && items.length > maxItems) {
+      items = items.slice(0, maxItems);
+    }
+
     await chrome.storage.local.set({
       recentlyCopiedItems: JSON.stringify(items),
     });

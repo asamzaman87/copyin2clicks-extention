@@ -46,7 +46,7 @@ function Container({ userData }) {
         listRef.current.scrollHeight - listRef.current.scrollTop ===
           listRef.current.clientHeight
       ) {
-        if (recentlyCopiedItems.length > 5 && !userData.stripeSubscriptionId) {
+        if (recentlyCopiedItems.length >= 5 && !userData.stripeSubscriptionId) {
           setShowUpgradePopup(true);
         }
       }
@@ -120,7 +120,7 @@ function Container({ userData }) {
     if (
       !item.starred &&
       updatedItems.filter((item) => !item.starred).length === 1 &&
-      recentlyCopiedItems.length >1
+      recentlyCopiedItems.length >=15
     ) {
       setToolTip("At Least One Item Must Remain Unstarred!");
       setShowTooltip(true);
@@ -200,7 +200,7 @@ function Container({ userData }) {
       </div>
       <div
         ref={listRef}
-        className="p-1 flex flex-col gap-1.5 max-h-[300px] mt-2 mb-2  overflow-auto"
+        className="p-1 flex flex-col gap-1.5 max-h-[200px] mt-2 mb-2  overflow-auto"
       >
         {recentlyCopiedItems.map((item, index) => (
           <Item

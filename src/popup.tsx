@@ -13,31 +13,68 @@ function IndexPopup() {
   const storage = new Storage({ area: "local" });
   const [error, setError] = useState(null);
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
-// const [userData , setUserData]= useStorage({key : 'userData' , instance: storage }, [])
 const [userData , setUserData] = useState([])
-// console.log('userData',userData)
 
+
+  // const fetchUserData = () => {
+  //   chrome.storage.sync.get( function (items) {
+  //     chrome.runtime.sendMessage(
+  //       { action: "fetchUserData" },
+  //       function (response) {
+  //         if (response.error) {
+  //           setError(response.error);
+  //           setUserData(null);
+  //         } else {
+  //           setError(null);
+  //           console.log('response', response)
+  //           setUserData(response);
+  //         }
+  //       }
+  //     );
+  //   });
+  // };
+  // useEffect(() => {
+  //   setAlert("");
+  //   fetchUserData();
+  // }, []);
 
   const fetchUserData = () => {
-    chrome.storage.sync.get( function (items) {
-      chrome.runtime.sendMessage(
-        { action: "fetchUserData" },
-        function (response) {
-          if (response.error) {
+    chrome.storage.sync.get("userData", (result) => {
+      if (result.userData) {
+        setUserData(result.userData);
+      } else {
+        chrome.runtime.sendMessage({ action: "fetchUserData" }, (response) => {
+          if (chrome.runtime.lastError) {
+            setError(chrome.runtime.lastError.message);
+            setUserData(null);
+          } else if (response.error) {
             setError(response.error);
             setUserData(null);
           } else {
             setError(null);
-            console.log('response', response)
             setUserData(response);
+            chrome.storage.sync.set({ userData: response });
           }
-        }
-      );
+        });
+      }
     });
   };
+  
   useEffect(() => {
     setAlert("");
     fetchUserData();
+  
+    const handleStorageChange = (changes, areaName) => {
+      if (areaName === "sync" && changes.userData) {
+        setUserData(changes.userData.newValue);
+      }
+    };
+  
+    chrome.storage.onChanged.addListener(handleStorageChange);
+  
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
   }, []);
 
   return (
