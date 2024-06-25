@@ -5,7 +5,6 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'fetchUserData') {
-    // const { token } = request;
     fetch('https://extension-landing-page-zeta.vercel.app/api/user-details')
     // fetch('http://localhost:3000/api/user-details')
     .then(response => response.json())

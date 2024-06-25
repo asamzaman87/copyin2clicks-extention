@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 import { HiOutlineDocumentDownload } from "react-icons/hi";
 import { IoMdOpen } from "react-icons/io";
@@ -55,12 +55,19 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
     { key: "alert", instance: storage },
     ""
   );
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleRemoveClick = () => {
+    setShowConfirm(true);
+  };
 
   async function onCopyToClipboard(text: string) {
-    if(!userData.stripeSubscriptionId){
-    setToolTip("Text has been copied to clipboard. Click on the CopyIn2Clicks extension to view!  Want to keep the original formatting? Click here to learn how to upgrade and enjoy enhanced copying features!");
-    }else{
-      setToolTip('Copied')
+    if (!userData.stripeSubscriptionId) {
+      setToolTip(
+        "Text has been copied to clipboard. Click on the CopyIn2Clicks extension to view!  Want to keep the original formatting? Click here to learn how to upgrade and enjoy enhanced copying features!"
+      );
+    } else {
+      setToolTip("Copied");
     }
     setTimeout(() => {
       setToolTip("");
@@ -69,8 +76,8 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
   }
 
   const onDownload = (text) => {
-    if(!userData?.stripeSubscriptionId){
-      setToolTip("Upgrade Premium To Download!")
+    if (!userData?.stripeSubscriptionId) {
+      setToolTip("Upgrade Premium To Download!");
       setTimeout(() => {
         setToolTip("");
       }, 500);
@@ -206,56 +213,79 @@ startxref
       {showActions && (
         <>
           <div>
-        <MdContentCopy
-          id="copy-ext-icon"
-          onClick={onCopyToClipboard.bind(this, text)}
-          className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
-        />
-        <ReactToolTip
-          text="Copy"
-          anchorSelect="#copy-ext-icon"
-          place="bottom-start"
-        />
-      </div>
-      <div>
-        <HiOutlineDocumentDownload
-          onClick={onDownload.bind(this, text)}
-          id="download-ext-icon"
-          className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline ${!extension  &&  "hover:scale-100 hover:cursor-default text-gray-400"}`}
-        />
-        <ReactToolTip
-          text={extension ? "Download" : "Please Set File Extension!"}
-          anchorSelect="#download-ext-icon"
-          place="bottom-start"
-        />
-      </div>
-      <div>
-        <IoMdOpen
-          onClick={onOpenInNewTab.bind(this, text)}
-          id="new-tab-ext-icon"
-          className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
-        />
-        <ReactToolTip
-          text="Open In New Tab"
-          anchorSelect="#new-tab-ext-icon"
-          place="bottom-start"
-        />
-      </div>
-      <div>
-        <AiOutlineCloseCircle
-          id="remove-ext-icon"
-          onClick={onRemove.bind(this, index)}
-          className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
-        />
-        <ReactToolTip
-          text="Remove"
-          anchorSelect="#remove-ext-icon"
-          place="bottom-start"
-        />
-      </div>
+            <MdContentCopy
+              id="copy-ext-icon"
+              onClick={onCopyToClipboard.bind(this, text)}
+              className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
+            />
+            <ReactToolTip
+              text="Copy"
+              anchorSelect="#copy-ext-icon"
+              place="bottom-start"
+            />
+          </div>
+          <div>
+            <HiOutlineDocumentDownload
+              onClick={onDownload.bind(this, text)}
+              id="download-ext-icon"
+              className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline ${!extension && "hover:scale-100 hover:cursor-default text-gray-400"}`}
+            />
+            <ReactToolTip
+              text={extension ? "Download" : "Please Set File Extension!"}
+              anchorSelect="#download-ext-icon"
+              place="bottom-start"
+            />
+          </div>
+          <div>
+            <IoMdOpen
+              onClick={onOpenInNewTab.bind(this, text)}
+              id="new-tab-ext-icon"
+              className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
+            />
+            <ReactToolTip
+              text="Open In New Tab"
+              anchorSelect="#new-tab-ext-icon"
+              place="bottom-start"
+            />
+          </div>
+          <div>
+            <AiOutlineCloseCircle
+              id="remove-ext-icon"
+              onClick={handleRemoveClick}
+              className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
+            />
+            <ReactToolTip
+              text="Remove"
+              anchorSelect="#remove-ext-icon"
+              place="bottom-start"
+            />
+          </div>
         </>
       )}
-    
+
+      {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Confirm Action</h2>
+            <p className="mb-4">Are you sure you want to remove this item ?</p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-1 px-4 rounded"
+              >
+                No
+              </button>
+              <button
+                onClick={onRemove.bind(this, index)}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-4 rounded"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         {starred ? (
           <FaStar

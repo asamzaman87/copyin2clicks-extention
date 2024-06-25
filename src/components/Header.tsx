@@ -29,19 +29,33 @@ function Header({ userData }) {
   const handleKeyCombinationChange = (e) => {
     setSelectedKeyCombination(e.target.value);
   };
-  const redirectToLogin =()=>{
-    window.open('https://extension-landing-page-zeta.vercel.app/login', "_blank");
-  }
-  const redirectToPremium =()=>{
-    window.open('https://extension-landing-page-zeta.vercel.app/premium', "_blank");
-  }
+  const redirectToLogin = () => {
+    window.open(
+      "https://extension-landing-page-zeta.vercel.app/login",
+      "_blank"
+    );
+  };
+  const redirectToPremium = () => {
+    window.open(
+      "https://extension-landing-page-zeta.vercel.app/premium",
+      "_blank"
+    );
+  };
 
   return (
     <div className="p-2 bg-slate-900 text-white">
-      <div className="absolute left-2.5 top-2.5 text-left">
-        <div onClick={redirectToPremium} className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer">
-          {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
+      <div className="absolute left-2.5 top-2.5 text-left z-10">
+        <a
+          href="https://extension-landing-page-zeta.vercel.app/premium"
+          target="_blank"
+        >
+        <div
+          // onClick={redirectToPremium}
+          className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
+        >
+            {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
         </div>
+          </a>
       </div>
       <div
         className="text-center ml-10 text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
@@ -60,11 +74,16 @@ function Header({ userData }) {
         {userData.name ? (
           <div className="inline-flex items-center justify-center w-8 h-8 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
             <span className="font-medium text-gray-600 dark:text-gray-300">
-            {userData?.name?.substring(0, 2).toUpperCase()}
+              {userData?.name?.substring(0, 2).toUpperCase()}
             </span>
           </div>
         ) : (
-          <div onClick={redirectToLogin} className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer">Login</div>
+          <div
+            onClick={redirectToLogin}
+            className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
+          >
+            Login
+          </div>
         )}
       </div>
       <div className="absolute right-2 top-2.5">

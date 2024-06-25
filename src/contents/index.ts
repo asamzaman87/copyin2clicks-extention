@@ -407,9 +407,21 @@ async function saveCopiedText(hasText = "", target = null) {
     const newItem = { text: hasText || selectedText, starred: false };
     items.unshift(newItem);
 
-    // If user is not subscribed and the items exceed the limit, remove the oldest items
-    if (!isSubscribed && items.length > maxItems) {
-      items = items.slice(0, maxItems);
+    // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
+    while (items.length > maxItems) {
+      let unstarredIndex = -1;
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (!items[i].starred) {
+          unstarredIndex = i;
+          break;
+        }
+      }
+      if (unstarredIndex !== -1) {
+        items.splice(unstarredIndex, 1);
+      } else {
+        // If all items are starred, remove the oldest item
+        items.pop();
+      }
     }
 
     await chrome.storage.local.set({
@@ -420,6 +432,7 @@ async function saveCopiedText(hasText = "", target = null) {
     setTimeout(() => renderPopup(), 500);
   });
 }
+
 
 function selectTextBetweenBrackets() {
   const startBracket = document.querySelector(`.${bracketStartElementClass}`);

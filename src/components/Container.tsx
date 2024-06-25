@@ -1,4 +1,3 @@
-// src/Container.js
 import React, { useEffect, useRef, useState } from "react";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
@@ -14,7 +13,7 @@ function Container({ userData }) {
   const [currentAction, setCurrentAction] = useState(null);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
-  let [key, setKey] = useState("");
+  const [key, setKey] = useState("");
   const [recentlyCopiedItems, setRecentlyCopiedItems] = useStorage(
     {
       key: "recentlyCopiedItems",
@@ -34,19 +33,20 @@ function Container({ userData }) {
 
   useEffect(() => {
     let platform = navigator.platform;
-    if (platform.includes("Mac")) {
-      setKey("Option");
-    } else {
-      setKey("AltKey");
-    }
+    setKey(platform.includes("Mac") ? "Option" : "AltKey");
+  }, []);
 
+  useEffect(() => {
     const handleScroll = () => {
       if (
         listRef.current &&
         listRef.current.scrollHeight - listRef.current.scrollTop ===
           listRef.current.clientHeight
       ) {
-        if (recentlyCopiedItems.length >= 5 && !userData.stripeSubscriptionId) {
+        if (
+          recentlyCopiedItems.length >= 5 &&
+          !userData?.stripeSubscriptionId
+        ) {
           setShowUpgradePopup(true);
         }
       }
@@ -114,13 +114,15 @@ function Container({ userData }) {
   }
 
   function toggleStar(index) {
+    const isSubscribed = userData?.stripeSubscriptionId;
     const updatedItems = [...recentlyCopiedItems];
     const item = updatedItems[index];
+    const maxitem = isSubscribed ? 15 : 5;
 
     if (
       !item.starred &&
       updatedItems.filter((item) => !item.starred).length === 1 &&
-      recentlyCopiedItems.length >=15
+      recentlyCopiedItems.length >= maxitem
     ) {
       setToolTip("At Least One Item Must Remain Unstarred!");
       setShowTooltip(true);
@@ -162,6 +164,14 @@ function Container({ userData }) {
 
   const hasStarredItems = recentlyCopiedItems.some((item) => item.starred);
 
+  // Display logic
+  let displayItems = [];
+  if (userData?.stripeSubscriptionId) {
+    displayItems = recentlyCopiedItems; // Show all items if subscribed
+  } else {
+    displayItems = recentlyCopiedItems.slice(0, 5); // Show up to 5 items if not subscribed
+  }
+
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center">
@@ -202,7 +212,7 @@ function Container({ userData }) {
         ref={listRef}
         className="p-1 flex flex-col gap-1.5 max-h-[200px] mt-2 mb-2  overflow-auto"
       >
-        {recentlyCopiedItems.map((item, index) => (
+        {displayItems.map((item, index) => (
           <Item
             text={item.text}
             index={index}
@@ -216,11 +226,11 @@ function Container({ userData }) {
           <p className="text-base font-semibold text-center text-gray-500 mt-1">
             To Start:
             <br />
-            1. Hover over the text, press "Option/Alt" on your keyboard while
+            1. Hover over the text, press "{key}" on your keyboard while
             clicking on your mouse pad.
             <br />
-            2. While still pressing “Option/Alt” move your mouse to the last
-            letter and click again
+            2. While still pressing “{key}” move your mouse to the last letter
+            and click again
             <br />
             3. That’s it! Click, click and you’re done!
           </p>
@@ -253,10 +263,24 @@ function Container({ userData }) {
       {showUpgradePopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white text-yellow-600 p-4 rounded shadow-lg text-center m-8">
+            <div className="flex justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="48"
+                height="48"
+                fill="#f59e0b"
+                className="w-12 h-12"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+              </svg>
+            </div>
             <p>
-              Want to save more than 5 of your recently copied text?<br/> Upgrade to
-              CopyIn2Clicks Premium and save more of your copied items!<br/> ✨ Click
-              here to expand your clipboard and enhance your productivity! ✨
+              Want to save more than 5 of your recently copied text?
+              <br /> Upgrade to CopyIn2Clicks Premium and save more of your
+              copied items!
+              <br /> ✨ Click here to expand your clipboard and enhance your
+              productivity! ✨
             </p>
             <button
               onClick={() => setShowUpgradePopup(false)}
