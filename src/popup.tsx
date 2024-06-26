@@ -13,8 +13,7 @@ function IndexPopup() {
   const storage = new Storage({ area: "local" });
   const [error, setError] = useState(null);
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
-const [userData , setUserData] = useState([])
-
+  const [userData, setUserData] = useState([]);
 
   // const fetchUserData = () => {
   //   chrome.storage.sync.get( function (items) {
@@ -59,19 +58,19 @@ const [userData , setUserData] = useState([])
       }
     });
   };
-  
+
   useEffect(() => {
     setAlert("");
     fetchUserData();
-  
+
     const handleStorageChange = (changes, areaName) => {
       if (areaName === "sync" && changes.userData) {
         setUserData(changes.userData.newValue);
       }
     };
-  
+
     chrome.storage.onChanged.addListener(handleStorageChange);
-  
+
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
@@ -79,11 +78,15 @@ const [userData , setUserData] = useState([])
 
   return (
     <>
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
       <div className="w-[450px] min-h-[100px] max-h-[450px]">
-        <Header userData={userData}/>
+        <Header userData={userData} />
         <main className="p-2">
-          <Container userData = {userData}/>
-          <Footer userData={userData}/>
+          <Container userData={userData} />
+          <Footer userData={userData} />
         </main>
         {alert && <Tooltip text={alert} />}
       </div>

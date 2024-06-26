@@ -358,23 +358,7 @@ function addEndIcon(x, y, pageX, pageY) {
   }
 }
 
-// async function saveCopiedText(hasText = "", target = null) {
-//   targetElement = target; // Store reference to the target element
-//   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-//     let items = result?.recentlyCopiedItems || "[]";
-//     items = Array.from(JSON.parse(items));
-//     if (selectedText === "" && !hasText) return;
-//     const newItem = { text: hasText ? hasText : selectedText, starred: false };
-//     items.unshift(newItem);
-//     items = items.length > 10 ? items.slice(0, 10) : items;
-//     await chrome.storage.local.set({
-//       recentlyCopiedItems: JSON.stringify(items),
-//     });
-//     await navigator.clipboard.writeText(newItem.text);
-//     isSelectionCompleted = true;
-//     setTimeout(() => renderPopup(), 500);
-//   });
-// }
+
 
 async function saveCopiedText(hasText = "", target = null) {
   const isSubscribed = userData?.stripeSubscriptionId;
@@ -447,9 +431,16 @@ function selectTextBetweenBrackets() {
     selection.addRange(range);
 
     selectedText = selection.toString();
-    saveCopiedText();
+
+    if (selectedText.trim() === "") {
+      renderErrorPopup("CopyIn2Clicks Error: No text found between brackets");
+      resetAll()
+    } else {
+      saveCopiedText();
+    }
   }
 }
+
 
 function insertBrackets(textContent, x, y) {
   let caretPosition;
