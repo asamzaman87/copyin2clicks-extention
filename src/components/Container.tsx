@@ -169,7 +169,11 @@ function Container({ userData }) {
   if (userData?.stripeSubscriptionId) {
     displayItems = recentlyCopiedItems; // Show all items if subscribed
   } else {
-    displayItems = recentlyCopiedItems.slice(0, 5); // Show up to 5 items if not subscribed
+    const starredItems = recentlyCopiedItems.filter(item => item.starred);
+    const unstarredItems = recentlyCopiedItems.filter(item => !item.starred);
+    
+    // Always include starred items and fill up with unstarred items to a total of 5
+    displayItems = [...starredItems, ...unstarredItems.slice(0, 5 - starredItems.length)];
   }
 
   return (
@@ -279,8 +283,8 @@ function Container({ userData }) {
               Want to save more than 5 of your recently copied text?
               <br /> Upgrade to CopyIn2Clicks Premium and save more of your
               copied items!
-              <br /> ✨ Click here to expand your clipboard and enhance your
-              productivity! ✨
+              <br /> <a style={{color : ':#f59e0b', textDecoration : 'underline'}} href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank">✨ Click here to expand your clipboard and enhance your
+              productivity! ✨</a>
             </p>
             <button
               onClick={() => setShowUpgradePopup(false)}

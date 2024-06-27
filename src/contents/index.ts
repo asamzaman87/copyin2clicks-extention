@@ -86,8 +86,8 @@ const renderPopup = () => {
   `;
 
   const popupText = isSubscribed
-    ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension to view!"
-    : "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension to view!<br>Want to keep the original formatting?<br>Click here to learn how to upgrade and enjoy enhanced copying features!";
+    ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!"
+    : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
 
   // Add content to the popup
   popup.innerHTML = `
@@ -382,7 +382,7 @@ async function saveCopiedText(hasText = "", target = null) {
 
     if (countWords(textToCopy) > maxWords && !isSubscribed) {
       renderUpgradePopup(
-        "Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/> ✨ Click here to enjoy unlimited copying today! ✨",
+        `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
         true
       );
       return;
