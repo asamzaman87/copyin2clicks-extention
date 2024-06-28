@@ -169,11 +169,9 @@ function Container({ userData }) {
   if (userData?.stripeSubscriptionId) {
     displayItems = recentlyCopiedItems; // Show all items if subscribed
   } else {
-    const starredItems = recentlyCopiedItems.filter(item => item.starred);
-    const unstarredItems = recentlyCopiedItems.filter(item => !item.starred);
-    
-    // Always include starred items and fill up with unstarred items to a total of 5
-    displayItems = [...starredItems, ...unstarredItems.slice(0, 5 - starredItems.length)];
+    displayItems = recentlyCopiedItems.filter(
+      (item) => item.starred || recentlyCopiedItems.indexOf(item) < 5
+    ); 
   }
 
   return (
