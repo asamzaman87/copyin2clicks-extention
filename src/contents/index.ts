@@ -231,7 +231,6 @@ document.addEventListener("keydown", function (event) {
 
 // for copy using alt.key
 document.addEventListener("click", function (event) {
-  // event.preventDefault();
   if (typeof chrome.storage === "undefined") {
     console.error("chrome.storage is not available.");
     return;

@@ -44,7 +44,9 @@
     "permissions": [
       "storage",
       "downloads",
-      "scripting"
+      "scripting",
+      "clipboardRead", 
+      "clipboardWrite"
     ]
   }
 }

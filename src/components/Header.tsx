@@ -23,6 +23,8 @@ function Header({ userData }) {
   );
 
   const [profiledropdown, setProfiledropdown] = useState(false);
+  const [error, setError] = useState("");
+  const [showError, setShowError] = useState(false);
 
   const handleRedirect = () => {
     window.open("https://extension-landing-page-zeta.vercel.app/", "_blank");
@@ -41,8 +43,42 @@ function Header({ userData }) {
   const handleProfiletoggle = () => {
     setProfiledropdown(!profiledropdown);
   };
-  const handleLogout = () => {
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(
+        "https://extension-landing-page-zeta.vercel.app/api/auth/signout?callbackUrl=/api/auth/session",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: await fetch("https://extension-landing-page-zeta.vercel.app/api/auth/csrf").then((rs) =>
+            rs.text()
+          ),
+        }
+      );
+      console.log("res", res);
+      if (res) {
+        window.open("https://extension-landing-page-zeta.vercel.app/login", "_blank");
+      }
+    } catch (err) {
+      console.log("Failed to logout");
+    }
+  };
+  const handleFormattingChange = () => {
+    if (userData.stripeSubscriptionId) {
+      setFormat(!format);
+      setError("");
+    } else {
+      setError("Please upgrade to premium to use this feature.");
+      setShowError(true); // Show the error message
+    }
+  };
+
+  const handleDismissError = () => {
+    setShowError(false); // Hide the error message
   };
 
   return (
@@ -97,7 +133,7 @@ function Header({ userData }) {
               </div>
             )}
           </div>
-      
+
           <div>
             <button
               id="setting-ext-icon"
@@ -142,7 +178,7 @@ function Header({ userData }) {
                     <div className="text-sm">Formatting</div>
                     <label className="switch text-black">
                       <input
-                        onChange={() => setFormat(!format)}
+                        onChange={handleFormattingChange}
                         checked={format}
                         type="checkbox"
                         id="copyStandardToggle"
@@ -150,6 +186,7 @@ function Header({ userData }) {
                       <div className="slider round"></div>
                     </label>
                   </div>
+
                   <div className="flex justify-between items-center mt-2">
                     <div className="text-sm">Keyboard Copy Key</div>
                     <select
@@ -170,13 +207,56 @@ function Header({ userData }) {
             <div className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black">
               <div className="p-2">
                 <div className="flex justify-end items-end cursor-pointer">
-                  <div className="text-sm" onClick={handleLogout}>Logout</div>
+                  <div
+                    className="text-sm cursor-pointer"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+      {showError && (
+        <div className="relative">
+          <div className="absolute z-50 top-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white text-yellow-600 p-4 rounded shadow-lg text-center m-8">
+              <div className="flex justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="48"
+                  height="48"
+                  fill="#f59e0b"
+                  className="w-12 h-12"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                </svg>
+              </div>
+              <p>
+                {error}
+                <br />
+                <a
+                  style={{ color: ":#f59e0b", textDecoration: "underline" }}
+                  href="https://extension-landing-page-zeta.vercel.app/premium"
+                  target="_blank"
+                >
+                  ✨ Click here to expand your clipboard and enhance your
+                  productivity! ✨
+                </a>
+              </p>
+              <button
+                onClick={handleDismissError}
+                className="bg-yellow-600 hover:bg-yellow-400 text-white font-bold py-1 px-4 rounded mt-4"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
