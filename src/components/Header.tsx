@@ -86,7 +86,7 @@ function Header({ userData }) {
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         <div className="">
           <a
-            href="https://extension-landing-page-zeta.vercel.app/premium"
+            href="http://localhost:3000/premium"
             target="_blank"
           >
             <div
@@ -95,7 +95,7 @@ function Header({ userData }) {
             >
               {userData?.stripeSubscriptionId
                 ? "Manage Subscription"
-                : "Manage Subscription"}
+                : "Upgrade"}
             </div>
           </a>
         </div>
