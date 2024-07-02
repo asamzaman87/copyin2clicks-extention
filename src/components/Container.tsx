@@ -171,7 +171,7 @@ function Container({ userData }) {
   } else {
     displayItems = recentlyCopiedItems.filter(
       (item) => item.starred || recentlyCopiedItems.indexOf(item) < 5
-    ); 
+    ).slice(0,5); 
   }
 
   return (
