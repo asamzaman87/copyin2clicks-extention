@@ -54,14 +54,17 @@ function Header({ userData }) {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          body: await fetch("https://extension-landing-page-zeta.vercel.app/api/auth/csrf").then((rs) =>
-            rs.text()
-          ),
+          body: await fetch(
+            "https://extension-landing-page-zeta.vercel.app/api/auth/csrf"
+          ).then((rs) => rs.text()),
         }
       );
       console.log("res", res);
       if (res) {
-        window.open("https://extension-landing-page-zeta.vercel.app/login", "_blank");
+        window.open(
+          "https://extension-landing-page-zeta.vercel.app/login",
+          "_blank"
+        );
       }
     } catch (err) {
       console.log("Failed to logout");
@@ -85,10 +88,7 @@ function Header({ userData }) {
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         <div className="">
-          <a
-            href="http://localhost:3000/premium"
-            target="_blank"
-          >
+          <a href="http://localhost:3000/premium" target="_blank">
             <div
               // onClick={redirectToPremium}
               className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
@@ -190,9 +190,10 @@ function Header({ userData }) {
                   <div className="flex justify-between items-center mt-2">
                     <div className="text-sm">Keyboard Copy Key</div>
                     <select
+                      style={{ fontSize: "12px" }}
                       value={selectedKeyCombination}
                       onChange={handleKeyCombinationChange}
-                      className="w-[137px] p-1.5 border border-black bg-white rounded-md shadow-sm focus:outline-none sm:text-sm select-custom"
+                      className="py-1.5 px-1 border border-black bg-white rounded-md shadow-sm focus:outline-none"
                     >
                       <option value="altKey">Alt/Option</option>
                       <option value="metaKey">Command/Window</option>
