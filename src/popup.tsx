@@ -14,28 +14,12 @@ function IndexPopup() {
   const [error, setError] = useState(null);
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
   const [userData, setUserData] = useState([]);
+  const [text,setText] = useState('Alt/Option')
 
-  // const fetchUserData = () => {
-  //   chrome.storage.sync.get( function (items) {
-  //     chrome.runtime.sendMessage(
-  //       { action: "fetchUserData" },
-  //       function (response) {
-  //         if (response.error) {
-  //           setError(response.error);
-  //           setUserData(null);
-  //         } else {
-  //           setError(null);
-  //           console.log('response', response)
-  //           setUserData(response);
-  //         }
-  //       }
-  //     );
-  //   });
-  // };
-  // useEffect(() => {
-  //   setAlert("");
-  //   fetchUserData();
-  // }, []);
+  const [selectedKeyCombination, setSelectedKeyCombination] = useStorage(
+    { key: "key", instance: new Storage({ area: "local" }) },
+    "altKey"
+  );
 
   // const fetchUserData = () => {
   //   chrome.storage.sync.get("userData", (result) => {
@@ -115,13 +99,25 @@ function IndexPopup() {
     };
   }, []);
 
+  const handleKeyCombinationChange = (e) => {
+    setSelectedKeyCombination(e.target.value);
+  };
+
+  useEffect(() => {
+    if(selectedKeyCombination === 'altKey') {
+      setText('Alt/Option');
+    } else if(selectedKeyCombination === 'metaKey') {
+      setText('Command/Window');
+    }
+  }, [selectedKeyCombination]);
+
   return (
     <>
   
       <div className="w-[450px] min-h-[100px] max-h-[450px]">
-        <Header userData={userData} />
+        <Header userData={userData} selectedKeyCombination={selectedKeyCombination}  handleKeyCombinationChange={handleKeyCombinationChange} />
         <main className="p-2">
-          <Container userData={userData} />
+          <Container userData={userData} selectedKeyCombination ={selectedKeyCombination} setSelectedKeyCombination={setSelectedKeyCombination} text={text}/>
           <Footer userData={userData} />
         </main>
         {alert && <Tooltip text={alert} />}

@@ -43,6 +43,8 @@ const renderPopup = () => {
 
   // Create overlay
   const overlay = document.createElement("div");
+  overlay.className = "copy-in-click-ext-popup"; // Add class
+
   overlay.style.cssText = `
     position: fixed;
     top: 0;
@@ -72,6 +74,8 @@ const renderPopup = () => {
   }
 
   const popup = document.createElement("div");
+  popup.className = "copy-in-click-ext-popup";
+
   popup.style.cssText = `
     position: fixed;
     top: 30%;
@@ -123,6 +127,8 @@ const renderPopup = () => {
 
 const renderErrorPopup = (errorMessage: string) => {
   const errorPopup = document.createElement("div");
+  errorPopup.className = "copy-in-click-ext-popup"; // Add class
+
   errorPopup.style.cssText = `
     position: fixed;
     top: 30%;
@@ -161,6 +167,8 @@ const renderErrorPopup = (errorMessage: string) => {
 
 const renderUpgradePopup = (message: string, showOkButton: boolean) => {
   const upgradePopup = document.createElement("div");
+  upgradePopup.className = "copy-in-click-ext-popup"; // Add class
+
   upgradePopup.style.cssText = `
     position: fixed;
     top: 30%;
@@ -207,29 +215,38 @@ const renderUpgradePopup = (message: string, showOkButton: boolean) => {
 };
 
 // for default copy text
+function isEventInPopup(event) {
+  return event.target.closest(".copy-in-click-ext-popup") !== null;
+}
 
 document.addEventListener("keydown", function (event) {
   const target = event.target;
 
   if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+    if (isEventInPopup(event)) {
+      return;
+    }
     if (typeof chrome.storage === "undefined") {
       console.error("chrome.storage is not available.");
       return;
     }
-    chrome.storage.local.get(["isOn", "useStandardCopy", "format"], function (result) {
-      const isOn = result.isOn === true || result.isOn === "true";
-      const useStandardCopy =
-        result.useStandardCopy === true || result.useStandardCopy === "true";
+    chrome.storage.local.get(
+      ["isOn", "useStandardCopy", "format"],
+      function (result) {
+        const isOn = result.isOn === true || result.isOn === "true";
+        const useStandardCopy =
+          result.useStandardCopy === true || result.useStandardCopy === "true";
         const format = result.format === true || result.format === "true";
 
-      // If both isOn and useStandardCopy are true, copy the selected text to the clipboard
-      if (isOn && useStandardCopy) {
-        const selection = window.getSelection().toString();
-        if (selection) {
-          saveCopiedText(selection,target, format);
+        // If both isOn and useStandardCopy are true, copy the selected text to the clipboard
+        if (isOn && useStandardCopy) {
+          const selection = window.getSelection().toString();
+          if (selection) {
+            saveCopiedText(selection, target, format);
+          }
         }
       }
-    });
+    );
   }
 });
 
@@ -240,6 +257,9 @@ document.addEventListener("click", function (event) {
     return;
   }
   if (event.altKey || event.metaKey) {
+    if (isEventInPopup(event)) {
+      return;
+    }
     // Exclude anchor tags
     event.preventDefault();
     chrome.storage.local.get(["isOn", "key", "format"], function (result) {
@@ -296,7 +316,7 @@ document.addEventListener("click", function (event) {
                 (
                   target as HTMLInputElement | HTMLTextAreaElement
                 ).setSelectionRange(openingBracketIndex + 1, cursorPosition);
-                saveCopiedText(selectedText, target , format);
+                saveCopiedText(selectedText, target, format);
               } else {
                 const errorMessage =
                   "CopyIn2Clicks Error: Closing Bracket Must be Placed After the Opening Bracket";
@@ -314,7 +334,7 @@ document.addEventListener("click", function (event) {
                 event.clientX,
                 event.clientY,
                 event.pageX,
-                event.pageY,
+                event.pageY
               );
             } else if (startNode) {
               endNode = findTextNodeFromPoint(event.clientX, event.clientY);
@@ -325,7 +345,6 @@ document.addEventListener("click", function (event) {
                 event.pageY,
                 target,
                 format
-
               );
             }
           }
@@ -339,11 +358,11 @@ document.addEventListener("click", function (event) {
   }
 });
 
-function addStartIcon(x, y, pageX, pageY,) {
+function addStartIcon(x, y, pageX, pageY) {
   insertBrackets("[", x, y);
 }
 
-function addEndIcon(x, y, pageX, pageY, target,format) {
+function addEndIcon(x, y, pageX, pageY, target, format) {
   const startBracket = document.querySelector(`.${bracketStartElementClass}`);
   if (!startBracket) return;
 
@@ -357,15 +376,13 @@ function addEndIcon(x, y, pageX, pageY, target,format) {
     (endY > startBracketRect.top && endX > startBracketRect.right)
   ) {
     insertBrackets("]", x, y);
-    selectTextBetweenBrackets(target , format);
+    selectTextBetweenBrackets(target, format);
   } else {
     const errorMessage =
       "CopyIn2Clicks Error: Closing Bracket Must be Placed After the Opening Bracket";
     renderErrorPopup(errorMessage);
   }
 }
-
-
 
 async function saveCopiedText(hasText = "", target = null, format) {
   const isSubscribed = userData?.stripeSubscriptionId;
@@ -378,13 +395,17 @@ async function saveCopiedText(hasText = "", target = null, format) {
   }
 
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
+    console.log("RAW ITEMS", Array.from(JSON.parse(result?.recentlyCopiedItems)))
     let items = result?.recentlyCopiedItems || "[]";
-    items = Array.from(JSON.parse(items));
-    const maxItems = isSubscribed ? 15 : 5; // Limit to 15 items for subscribed users, 5 for free users
+    console.log("recentlyCopiedItemsContent Before====>", items)
+    items = JSON.parse(JSON.stringify(Array.from(JSON.parse(items))));
+    console.log("recentlyCopiedItemsContent FORMATTED ARRAY Before====>", items)
+
+    const maxItems = items?.length > 5 ? 15 : isSubscribed ? 15 : 5; // Limit to 15 items for subscribed users, 5 for free users
 
     if (selectedText === "" && !hasText) return;
 
-    const maxWords = 500;
+    const maxWords = isSubscribed ? 5000 : 500;
     const textToCopy = hasText || selectedText;
 
     if (countWords(textToCopy) > maxWords && !isSubscribed) {
@@ -395,8 +416,13 @@ async function saveCopiedText(hasText = "", target = null, format) {
       return;
     }
 
-    const newItem = { text: hasText || selectedText, starred: false };
+    const newItem = {
+      id: new Date(),
+      text: hasText || selectedText,
+      starred: false,
+    };
     items.unshift(newItem);
+    console.log("recentlyCopiedItemsContent After Unsihiftt Before====>", items)
 
     // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
     while (items.length > maxItems) {
@@ -414,6 +440,7 @@ async function saveCopiedText(hasText = "", target = null, format) {
         items.pop();
       }
     }
+    console.log("recentlyCopiedItemsContent Before SETTTTt Before====>", items)
 
     await chrome.storage.local.set({
       recentlyCopiedItems: JSON.stringify(items),
@@ -430,8 +457,8 @@ async function saveCopiedText(hasText = "", target = null, format) {
       await navigator.clipboard.write([
         new ClipboardItem({
           "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-          "text/html": new Blob([html], { type: "text/html" })
-        })
+          "text/html": new Blob([html], { type: "text/html" }),
+        }),
       ]);
     } else {
       await navigator.clipboard.writeText(newItem.text);
@@ -441,11 +468,13 @@ async function saveCopiedText(hasText = "", target = null, format) {
     setTimeout(() => renderPopup(), 500);
   });
 }
+function resetEndBracketOnly() {
+  endNode = null;
+  let bracketEnd = document.querySelectorAll(`.${bracketEndElementClass}`);
+  if (bracketEnd) bracketEnd.forEach((bracket) => bracket.remove());
+}
 
-
-function selectTextBetweenBrackets(target , format) {
-  // chrome.storage.local.get(["format"], function (result) {
-  //   const format = result.format === true || result.format === "true";
+function selectTextBetweenBrackets(target, format) {
   const startBracket = document.querySelector(`.${bracketStartElementClass}`);
   const endBracket = document.querySelector(`.${bracketEndElementClass}`);
   if (startBracket && endBracket) {
@@ -461,14 +490,12 @@ function selectTextBetweenBrackets(target , format) {
 
     if (selectedText.trim() === "") {
       renderErrorPopup("CopyIn2Clicks Error: No text found between brackets");
-      resetAll()
+      resetEndBracketOnly();
     } else {
-      saveCopiedText(selectedText,target, format);
+      saveCopiedText(selectedText, target, format);
     }
   }
-// })
 }
-
 
 function insertBrackets(textContent, x, y) {
   let caretPosition;

@@ -190,23 +190,26 @@ startxref
     );
   }
 
-  function onRemove(index: number) {
-    chrome.storage.local.get(["recentlyCopiedItems"], (result) => {
-      let items = result.recentlyCopiedItems
-        ? JSON.parse(result.recentlyCopiedItems)
-        : [];
-      if (index >= 0 && index < items.length) {
-        items.splice(index, 1);
-        chrome.storage.local.set({
-          recentlyCopiedItems: JSON.stringify(items),
-        });
-        setToolTip("Removed!");
-        setTimeout(() => {
-          setToolTip("");
-        }, 500);
-      }
-    });
-  }
+ function onRemove(idToRemove) {
+  chrome.storage.local.get(["recentlyCopiedItems"], (result) => {
+    let items = result.recentlyCopiedItems ? JSON.parse(result.recentlyCopiedItems) : [];
+    
+    // Find index of item with matching id
+    const indexToRemove = items.findIndex(item => item.id === idToRemove);
+    
+    if (indexToRemove !== -1) {
+      items.splice(indexToRemove, 1); // Remove item from array
+      chrome.storage.local.set({
+        recentlyCopiedItems: JSON.stringify(items),
+      });
+      setToolTip("Removed!");
+      setTimeout(() => {
+        setToolTip("");
+      }, 500);
+    }
+  });
+}
+
 
   return (
     <div className="actions flex gap-0.5 self-end ">
@@ -276,7 +279,7 @@ startxref
                 No
               </button>
               <button
-                onClick={onRemove.bind(this, index)}
+                onClick={() => onRemove(index)}
                 className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-4 rounded"
               >
                 Yes

@@ -6,7 +6,7 @@ import { FaRegStar } from "react-icons/fa";
 import Item from "./Item";
 import ReactToolTip from "./ReactToolTip";
 
-function Container({ userData }) {
+function Container({ userData, text }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState("");
@@ -31,6 +31,8 @@ function Container({ userData }) {
 
   const listRef = useRef(null);
 
+  console.log(recentlyCopiedItems, 'recentlyCopiedItems')
+
   useEffect(() => {
     let platform = navigator.platform;
     setKey(platform.includes("Mac") ? "Option" : "AltKey");
@@ -41,7 +43,7 @@ function Container({ userData }) {
       if (
         listRef.current &&
         listRef.current.scrollHeight - listRef.current.scrollTop ===
-          listRef.current.clientHeight
+        listRef.current.clientHeight
       ) {
         if (
           recentlyCopiedItems.length >= 5 &&
@@ -113,39 +115,43 @@ function Container({ userData }) {
     }, 2000);
   }
 
-  function toggleStar(index) {
+  function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
-    const updatedItems = [...recentlyCopiedItems];
-    const item = updatedItems[index];
-    const maxitem = isSubscribed ? 15 : 5;
+    const updatedItems = recentlyCopiedItems.map((item) => {
+      if (item.id === id) {
+        const maxitem = isSubscribed ? 15 : 5;
 
-    if (
-      !item.starred &&
-      updatedItems.filter((item) => !item.starred).length === 1 &&
-      recentlyCopiedItems.length >= maxitem
-    ) {
-      setToolTip("At Least One Item Must Remain Unstarred!");
-      setShowTooltip(true);
-      setTimeout(() => {
-        setToolTip("");
-        setShowTooltip(false);
-      }, 2000);
-      return;
-    }
+        if (
+          !item.starred &&
+          // recentlyCopiedItems.filter((item) => !item.starred).length === 1 &&
+          recentlyCopiedItems.length >= maxitem
+        ) {
+          setToolTip("At Least One Item Must Remain Unstarred!");
+          setShowTooltip(true);
+          setTimeout(() => {
+            setToolTip("");
+            setShowTooltip(false);
+          }, 2000);
+          return item;
+        }
 
-    item.starred = !item.starred;
+        item.starred = !item.starred;
+
+        if (item.starred) {
+          setToolTip("Copied Item Starred!");
+        } else {
+          setToolTip("Copied Item Unstarred!");
+        }
+
+        setShowTooltip(true);
+        setTimeout(() => {
+          setToolTip("");
+          setShowTooltip(false);
+        }, 500);
+      }
+      return item;
+    });
     setRecentlyCopiedItems(updatedItems);
-
-    if (item.starred) {
-      setToolTip("Copied Item Starred!");
-    } else {
-      setToolTip("Copied Item Unstarred!");
-    }
-    setShowTooltip(true);
-    setTimeout(() => {
-      setToolTip("");
-      setShowTooltip(false);
-    }, 500);
   }
 
   function unstarAllItems() {
@@ -169,9 +175,9 @@ function Container({ userData }) {
   if (userData?.stripeSubscriptionId) {
     displayItems = recentlyCopiedItems; // Show all items if subscribed
   } else {
-    displayItems = recentlyCopiedItems.filter(
-      (item) => item.starred || recentlyCopiedItems.indexOf(item) < 5
-    ).slice(0,5); 
+    displayItems = recentlyCopiedItems
+      .sort((a, b) => b.starred - a.starred) // Sort by starred first
+      .slice(0, 5); // Show only the first 5 items
   }
 
   return (
@@ -214,11 +220,11 @@ function Container({ userData }) {
         ref={listRef}
         className="p-1 flex flex-col gap-1.5 max-h-[200px] mt-2 mb-2  overflow-auto"
       >
-        {displayItems.map((item, index) => (
+        {displayItems.map((item) => (
           <Item
             text={item.text}
-            index={index}
-            key={item.text + index}
+            index={item.id}
+            key={item.id}
             starred={item.starred}
             toggleStar={toggleStar}
             userData={userData}
@@ -228,10 +234,10 @@ function Container({ userData }) {
           <p className="text-base font-semibold text-center text-gray-500 mt-1">
             To Start:
             <br />
-            1. Hover over the text, press "{key}" on your keyboard while
+            1. Hover over the text, press "{text}" on your keyboard while
             clicking on your mouse pad.
             <br />
-            2. While still pressing “{key}” move your mouse to the last letter
+            2. While still pressing “{text}” move your mouse to the last letter
             and click again
             <br />
             3. That’s it! Click, click and you’re done!

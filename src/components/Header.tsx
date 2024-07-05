@@ -3,24 +3,27 @@ import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import ReactToolTip from "./ReactToolTip";
 
-function Header({ userData }) {
+function Header({
+  userData,
+  selectedKeyCombination,
+  handleKeyCombinationChange,
+}) {
+  const initialFormat = userData?.stripeSubscriptionId ? true : false;
+
   const [isOn, setIsOn] = useStorage(
     { key: "isOn", instance: new Storage({ area: "local" }) },
     true
   );
   const [useStandardCopy, setUseStandardCopy] = useStorage(
     { key: "useStandardCopy", instance: new Storage({ area: "local" }) },
-    false
+    true
   );
   const [format, setFormat] = useStorage(
     { key: "format", instance: new Storage({ area: "local" }) },
-    false
+    initialFormat
   );
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedKeyCombination, setSelectedKeyCombination] = useStorage(
-    { key: "key", instance: new Storage({ area: "local" }) },
-    "altKey"
-  );
 
   const [profiledropdown, setProfiledropdown] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +33,6 @@ function Header({ userData }) {
     window.open("https://extension-landing-page-zeta.vercel.app/", "_blank");
   };
 
-  const handleKeyCombinationChange = (e) => {
-    setSelectedKeyCombination(e.target.value);
-  };
   const redirectToLogin = () => {
     window.open(
       "https://extension-landing-page-zeta.vercel.app/login",
@@ -42,6 +42,9 @@ function Header({ userData }) {
 
   const handleProfiletoggle = () => {
     setProfiledropdown(!profiledropdown);
+    if(userData.stripeSubscriptionId){
+      setFormat(true)
+    }
   };
 
   const handleLogout = async () => {
@@ -71,7 +74,7 @@ function Header({ userData }) {
     }
   };
   const handleFormattingChange = () => {
-    if (userData.stripeSubscriptionId) {
+    if (userData && userData.stripeSubscriptionId) {
       setFormat(!format);
       setError("");
     } else {
@@ -84,11 +87,23 @@ function Header({ userData }) {
     setShowError(false); // Hide the error message
   };
 
+  useEffect(() => {
+    if (userData && userData.stripeSubscriptionId) {
+      setFormat(true);
+    } else {
+      setFormat(false);
+    }
+  }, [userData]);
+  
+
   return (
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         <div className="">
-          <a href="http://localhost:3000/premium" target="_blank">
+          <a
+            href="https://extension-landing-page-zeta.vercel.app/premium"
+            target="_blank"
+          >
             <div
               // onClick={redirectToPremium}
               className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
