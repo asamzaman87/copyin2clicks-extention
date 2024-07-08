@@ -8,14 +8,27 @@ function Header({
   selectedKeyCombination,
   handleKeyCombinationChange,
 }) {
+  const storage = new Storage({ area: "local" });
+
   const initialFormat = userData?.stripeSubscriptionId ? true : false;
+
+  useEffect(() => {
+    storage.get("useStandardCopy").then((result) => {
+      if (result === undefined) {
+        storage.set("useStandardCopy", true);
+        setUseStandardCopy(true);
+      }
+    });
+  }, []);
+
+
 
   const [isOn, setIsOn] = useStorage(
     { key: "isOn", instance: new Storage({ area: "local" }) },
     true
   );
   const [useStandardCopy, setUseStandardCopy] = useStorage(
-    { key: "useStandardCopy", instance: new Storage({ area: "local" }) },
+    { key: "useStandardCopy", instance: storage },
     true
   );
   const [format, setFormat] = useStorage(

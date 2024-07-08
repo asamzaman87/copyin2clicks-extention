@@ -214,22 +214,21 @@ const renderUpgradePopup = (message: string, showOkButton: boolean) => {
   }
 };
 
-// for default copy text
 function isEventInPopup(event) {
   return event.target.closest(".copy-in-click-ext-popup") !== null;
 }
+
+// for default copy text
 
 document.addEventListener("keydown", function (event) {
   const target = event.target;
 
   if ((event.ctrlKey || event.metaKey) && event.key === "c") {
-    if (isEventInPopup(event)) {
-      return;
-    }
     if (typeof chrome.storage === "undefined") {
       console.error("chrome.storage is not available.");
       return;
     }
+
     chrome.storage.local.get(
       ["isOn", "useStandardCopy", "format"],
       function (result) {
@@ -240,6 +239,9 @@ document.addEventListener("keydown", function (event) {
 
         // If both isOn and useStandardCopy are true, copy the selected text to the clipboard
         if (isOn && useStandardCopy) {
+          if (isEventInPopup(event)) {
+            return;
+          }
           const selection = window.getSelection().toString();
           if (selection) {
             saveCopiedText(selection, target, format);
@@ -257,9 +259,6 @@ document.addEventListener("click", function (event) {
     return;
   }
   if (event.altKey || event.metaKey) {
-    if (isEventInPopup(event)) {
-      return;
-    }
     // Exclude anchor tags
     event.preventDefault();
     chrome.storage.local.get(["isOn", "key", "format"], function (result) {
@@ -267,6 +266,9 @@ document.addEventListener("click", function (event) {
         const keyCombination = result.key || "altKey";
         const format = result.format === true || result.format === "true";
         if (event[keyCombination.replaceAll('"', "")]) {
+          if (isEventInPopup(event)) {
+            return;
+          }
           const target = event.target;
           if (
             (target as HTMLElement).tagName === "INPUT" ||
@@ -395,12 +397,8 @@ async function saveCopiedText(hasText = "", target = null, format) {
   }
 
   chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-    console.log("RAW ITEMS", Array.from(JSON.parse(result?.recentlyCopiedItems)))
     let items = result?.recentlyCopiedItems || "[]";
-    console.log("recentlyCopiedItemsContent Before====>", items)
-    items = JSON.parse(JSON.stringify(Array.from(JSON.parse(items))));
-    console.log("recentlyCopiedItemsContent FORMATTED ARRAY Before====>", items)
-
+    items = Array.from(JSON.parse(items));
     const maxItems = items?.length > 5 ? 15 : isSubscribed ? 15 : 5; // Limit to 15 items for subscribed users, 5 for free users
 
     if (selectedText === "" && !hasText) return;
@@ -417,12 +415,11 @@ async function saveCopiedText(hasText = "", target = null, format) {
     }
 
     const newItem = {
-      id: new Date(),
+      id: new Date().getTime(),
       text: hasText || selectedText,
       starred: false,
     };
     items.unshift(newItem);
-    console.log("recentlyCopiedItemsContent After Unsihiftt Before====>", items)
 
     // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
     while (items.length > maxItems) {
@@ -440,7 +437,6 @@ async function saveCopiedText(hasText = "", target = null, format) {
         items.pop();
       }
     }
-    console.log("recentlyCopiedItemsContent Before SETTTTt Before====>", items)
 
     await chrome.storage.local.set({
       recentlyCopiedItems: JSON.stringify(items),
@@ -468,6 +464,7 @@ async function saveCopiedText(hasText = "", target = null, format) {
     setTimeout(() => renderPopup(), 500);
   });
 }
+
 function resetEndBracketOnly() {
   endNode = null;
   let bracketEnd = document.querySelectorAll(`.${bracketEndElementClass}`);
@@ -475,6 +472,8 @@ function resetEndBracketOnly() {
 }
 
 function selectTextBetweenBrackets(target, format) {
+  // chrome.storage.local.get(["format"], function (result) {
+  //   const format = result.format === true || result.format === "true";
   const startBracket = document.querySelector(`.${bracketStartElementClass}`);
   const endBracket = document.querySelector(`.${bracketEndElementClass}`);
   if (startBracket && endBracket) {
@@ -495,6 +494,7 @@ function selectTextBetweenBrackets(target, format) {
       saveCopiedText(selectedText, target, format);
     }
   }
+  // })
 }
 
 function insertBrackets(textContent, x, y) {
