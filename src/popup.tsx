@@ -117,7 +117,7 @@ function IndexPopup() {
       <div className="w-[450px] min-h-[100px] max-h-[450px]">
         <Header userData={userData} selectedKeyCombination={selectedKeyCombination}  handleKeyCombinationChange={handleKeyCombinationChange} />
         <main className="p-2">
-          <Container userData={userData} selectedKeyCombination ={selectedKeyCombination} setSelectedKeyCombination={setSelectedKeyCombination} text={text}/>
+          <Container userData={userData}  text={text}/>
           <Footer userData={userData} />
         </main>
         {alert && <Tooltip text={alert} />}

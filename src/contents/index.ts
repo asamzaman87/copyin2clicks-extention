@@ -472,8 +472,6 @@ function resetEndBracketOnly() {
 }
 
 function selectTextBetweenBrackets(target, format) {
-  // chrome.storage.local.get(["format"], function (result) {
-  //   const format = result.format === true || result.format === "true";
   const startBracket = document.querySelector(`.${bracketStartElementClass}`);
   const endBracket = document.querySelector(`.${bracketEndElementClass}`);
   if (startBracket && endBracket) {
@@ -494,7 +492,6 @@ function selectTextBetweenBrackets(target, format) {
       saveCopiedText(selectedText, target, format);
     }
   }
-  // })
 }
 
 function insertBrackets(textContent, x, y) {
