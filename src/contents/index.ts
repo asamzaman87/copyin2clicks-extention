@@ -161,7 +161,7 @@ const renderErrorPopup = (errorMessage: string) => {
     errorPopup.style.opacity = "0";
     setTimeout(() => {
       errorPopup.remove();
-    }, 200);
+    }, 500);
   }, 1500); // Remove error popup after 3 seconds
 };
 
@@ -267,6 +267,10 @@ document.addEventListener("click", function (event) {
         const format = result.format === true || result.format === "true";
         if (event[keyCombination.replaceAll('"', "")]) {
           if (isEventInPopup(event)) {
+            return;
+          }
+          if (window.location.hostname.includes("sites.google.com")) {
+            renderErrorPopup("CopyIn2Clicks is not supported on sites.google.com");
             return;
           }
           const target = event.target;
