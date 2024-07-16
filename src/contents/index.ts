@@ -17,6 +17,7 @@ let userData = [];
 
 const fetchUserData = () => {
   chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
+    console.log("FETCH TUN CONTENT");
     if (response.error) {
       console.error(response.error);
       userData = null;
@@ -63,7 +64,7 @@ const renderPopup = () => {
     setTimeout(() => {
       popup.remove();
       window.getSelection().removeAllRanges();
-
+      resetAll();
       // Clear brackets in input/textarea after clicking "OK"
       if (targetElement) {
         const inputValue = targetElement.value;
@@ -270,7 +271,9 @@ document.addEventListener("click", function (event) {
             return;
           }
           if (window.location.hostname.includes("sites.google.com")) {
-            renderErrorPopup("CopyIn2Clicks is not supported on sites.google.com");
+            renderErrorPopup(
+              "CopyIn2Clicks is not supported on sites.google.com"
+            );
             return;
           }
           const target = event.target;
@@ -391,81 +394,87 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 }
 
 async function saveCopiedText(hasText = "", target = null, format) {
-  const isSubscribed = userData?.stripeSubscriptionId;
+  chrome.storage.local.get(["lastLoggedInUser"], function (result) {
+    const lastUserEmail = result.lastLoggedInUser;
+    console.log(lastUserEmail?.replace(/"/g, ""), "lastUserEmaillastUserEmail");
+    const isSubscribed = userData?.stripeSubscriptionId;
+    const userEmail = userData?.email || lastUserEmail?.replace(/"/g, ""); // Get the user email
+    console.log("userEmail", userEmail);
 
-  let targetElement = target;
-
-  // Function to count words in a string
-  function countWords(text) {
-    return text.split(/\s+/).length;
-  }
-
-  chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-    let items = result?.recentlyCopiedItems || "[]";
-    items = Array.from(JSON.parse(items));
-    const maxItems = items?.length > 5 ? 15 : isSubscribed ? 15 : 5; // Limit to 15 items for subscribed users, 5 for free users
-
-    if (selectedText === "" && !hasText) return;
-
-    const maxWords = isSubscribed ? 5000 : 500;
-    const textToCopy = hasText || selectedText;
-
-    if (countWords(textToCopy) > maxWords && !isSubscribed) {
-      renderUpgradePopup(
-        `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-        true
-      );
-      return;
+    // Function to count words in a string
+    function countWords(text) {
+      return text.split(/\s+/).length;
     }
 
-    const newItem = {
-      id: new Date().getTime(),
-      text: hasText || selectedText,
-      starred: false,
-    };
-    items.unshift(newItem);
+    chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
+      let items = result?.recentlyCopiedItems || "[]";
+      items = Array.from(JSON.parse(items));
+      const maxItems = items?.length > 5 ? 15 : isSubscribed ? 15 : 5;
+      // const maxItems = isSubscribed ? 15 : 5;
 
-    // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
-    while (items.length > maxItems) {
-      let unstarredIndex = -1;
-      for (let i = items.length - 1; i >= 0; i--) {
-        if (!items[i].starred) {
-          unstarredIndex = i;
-          break;
+      if (selectedText === "" && !hasText) return;
+
+      const maxWords = isSubscribed ? 5000 : 500;
+      const textToCopy = hasText || selectedText;
+
+      if (countWords(textToCopy) > maxWords && !isSubscribed) {
+        renderUpgradePopup(
+          `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+          true
+        );
+        return;
+      }
+
+      const newItem = {
+        id: new Date().getTime(),
+        text: hasText || selectedText,
+        starred: false,
+        email: userEmail, // Include user email in the item
+      };
+      items.unshift(newItem);
+
+      // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
+      while (items.length > maxItems) {
+        let unstarredIndex = -1;
+        for (let i = items.length - 1; i >= 0; i--) {
+          if (!items[i].starred) {
+            unstarredIndex = i;
+            break;
+          }
+        }
+        if (unstarredIndex !== -1) {
+          items.splice(unstarredIndex, 1);
+        } else {
+          // If all items are starred, remove the oldest item
+          items.pop();
         }
       }
-      if (unstarredIndex !== -1) {
-        items.splice(unstarredIndex, 1);
+
+      await chrome.storage.local.set({
+        recentlyCopiedItems: JSON.stringify(items),
+      });
+
+      if (isSubscribed && format) {
+        const selection = window.getSelection();
+        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        const div = document.createElement("div");
+        if (range) {
+          div.appendChild(range.cloneContents());
+        }
+        const html = div.innerHTML;
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([newItem.text], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
       } else {
-        // If all items are starred, remove the oldest item
-        items.pop();
+        await navigator.clipboard.writeText(newItem.text);
       }
-    }
 
-    await chrome.storage.local.set({
-      recentlyCopiedItems: JSON.stringify(items),
+      isSelectionCompleted = true;
+      setTimeout(() => renderPopup(), 500);
     });
-
-    if (isSubscribed && format) {
-      const selection = window.getSelection();
-      const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-      const div = document.createElement("div");
-      if (range) {
-        div.appendChild(range.cloneContents());
-      }
-      const html = div.innerHTML;
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-          "text/html": new Blob([html], { type: "text/html" }),
-        }),
-      ]);
-    } else {
-      await navigator.clipboard.writeText(newItem.text);
-    }
-
-    isSelectionCompleted = true;
-    setTimeout(() => renderPopup(), 500);
   });
 }
 

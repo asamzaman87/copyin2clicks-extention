@@ -46,7 +46,9 @@
       "downloads",
       "scripting",
       "clipboardRead", 
-      "clipboardWrite"
+      "clipboardWrite",
+      "tabs",
+      "activeTab"
     ]
   }
 }

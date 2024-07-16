@@ -16,33 +16,16 @@ function IndexPopup() {
   const [userData, setUserData] = useState([]);
   const [text,setText] = useState('Alt/Option')
 
+  const [lastLoggedInUser, setLastLoggdInUser] = useStorage(
+    { key: 'lastLoggedInUser', instance: new Storage({ area: 'local' }) },
+  );
+
   const [selectedKeyCombination, setSelectedKeyCombination] = useStorage(
     { key: "key", instance: new Storage({ area: "local" }) },
     "altKey"
   );
 
-  // const fetchUserData = () => {
-  //   chrome.storage.sync.get("userData", (result) => {
-  //     console.log('resultresultresult', result)
-  //     if (result.userData) {
-  //       setUserData(result.userData);
-  //     } else {
-  //       chrome.runtime.sendMessage({ action: "fetchUserData" }, (response) => {
-  //         if (chrome.runtime.lastError) {
-  //           setError(chrome.runtime.lastError.message);
-  //           setUserData(null);
-  //         } else if (response.error) {
-  //           setError(response.error);
-  //           setUserData(null);
-  //         } else {
-  //           setError(null);
-  //           setUserData(response);
-  //           chrome.storage.sync.set({ userData: response });
-  //         }
-  //       });
-  //     }
-  //   });
-  // };
+
 
   const getUserDataFromStorage = () => {
     return new Promise((resolve, reject) => {
@@ -61,6 +44,9 @@ function IndexPopup() {
       const userData = await getUserDataFromStorage();
       if (userData) {
         setUserData(userData);
+        if(userData?.email) {
+          setLastLoggdInUser(userData?.email)
+        }
       } else {
         throw new Error('No userData found');
       }
@@ -76,6 +62,7 @@ function IndexPopup() {
         } else {
           setError(null);
           setUserData(response);
+          setLastLoggdInUser(response?.email)
           chrome.storage.sync.set({ userData: response });
         }
       });
@@ -115,9 +102,9 @@ function IndexPopup() {
     <>
   
       <div className="w-[450px] min-h-[100px] max-h-[450px]">
-        <Header userData={userData} selectedKeyCombination={selectedKeyCombination}  handleKeyCombinationChange={handleKeyCombinationChange} />
+        <Header setLastLoggdInUser={setLastLoggdInUser} userData={userData} selectedKeyCombination={selectedKeyCombination}  handleKeyCombinationChange={handleKeyCombinationChange} />
         <main className="p-2">
-          <Container userData={userData}  text={text}/>
+          <Container lastLoggedInUser={lastLoggedInUser} userData={userData}  text={text}/>
           <Footer userData={userData} />
         </main>
         {alert && <Tooltip text={alert} />}

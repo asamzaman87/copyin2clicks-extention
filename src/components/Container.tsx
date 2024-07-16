@@ -6,7 +6,7 @@ import { FaRegStar } from "react-icons/fa";
 import Item from "./Item";
 import ReactToolTip from "./ReactToolTip";
 
-function Container({ userData, text }) {
+function Container({ userData, text, lastLoggedInUser }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState("");
@@ -28,10 +28,11 @@ function Container({ userData, text }) {
     { key: "alert", instance: storage },
     ""
   );
-
   const listRef = useRef(null);
 
-  console.log(recentlyCopiedItems, 'recentlyCopiedItems')
+  console.log("lastLoggedInUser121212", lastLoggedInUser);
+
+  console.log(recentlyCopiedItems, "recentlyCopiedItems");
 
   useEffect(() => {
     let platform = navigator.platform;
@@ -43,7 +44,7 @@ function Container({ userData, text }) {
       if (
         listRef.current &&
         listRef.current.scrollHeight - listRef.current.scrollTop ===
-        listRef.current.clientHeight
+          listRef.current.clientHeight
       ) {
         if (
           recentlyCopiedItems.length >= 5 &&
@@ -92,7 +93,40 @@ function Container({ userData, text }) {
   }
 
   function clearCopiedItems() {
-    const unstarredItems = recentlyCopiedItems.filter((item) => !item.starred);
+    // Calculate the displayItems before any operations
+    let displayItems = [];
+    if (userData.email) {
+      displayItems = recentlyCopiedItems.filter(
+        (item) => item.email === userData.email
+      );
+      if (userData.stripeSubscriptionId) {
+        displayItems = displayItems;
+      } else {
+        displayItems = displayItems
+          .sort((a, b) => {
+            if (b.starred && !a.starred) return 1;
+            if (!b.starred && a.starred) return -1;
+            if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+            return b.id - a.id;
+          })
+          .slice(0, 5);
+      }
+    } else {
+      displayItems = recentlyCopiedItems
+        .filter((item) => item.email === lastLoggedInUser)
+        .sort((a, b) => {
+          if (b.starred && !a.starred) return 1;
+          if (!b.starred && a.starred) return -1;
+          if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+          return b.id - a.id;
+        })
+        .slice(0, 5);
+    }
+
+    // Filter unstarred items that are in displayItems
+    const unstarredItems = displayItems.filter((item) => !item.starred);
 
     if (unstarredItems.length === 0) {
       setToolTip("No Unstarred Items To Delete!");
@@ -104,9 +138,14 @@ function Container({ userData, text }) {
       return;
     }
 
-    const starredItems = recentlyCopiedItems.filter((item) => item.starred);
+    // Filter remaining items, excluding unstarred items that are in displayItems
+    const remainingItems = recentlyCopiedItems.filter(
+      (item) =>
+        item.starred ||
+        !displayItems.some((displayItem) => displayItem.id === item.id)
+    );
 
-    setRecentlyCopiedItems(starredItems);
+    setRecentlyCopiedItems(remainingItems);
     setToolTip("All Unstarred Copied Items Removed!");
     setShowTooltip(true);
     setTimeout(() => {
@@ -115,16 +154,50 @@ function Container({ userData, text }) {
     }, 2000);
   }
 
+  // function clearCopiedItems() {
+  //   const unstarredItems = recentlyCopiedItems.filter(
+  //     (item) => item.email === userData.email || item.email === lastLoggedInUser && !item.starred
+  //   );
+
+  //   if (unstarredItems.length === 0) {
+  //     setToolTip("No Unstarred Items To Delete!");
+  //     setShowTooltip(true);
+  //     setTimeout(() => {
+  //       setToolTip("");
+  //       setShowTooltip(false);
+  //     }, 2000);
+  //     return;
+  //   }
+
+  //   const remainingItems = recentlyCopiedItems.filter(
+  //     (item) => item.starred && item.email !== userData.email  || item.email !==lastLoggedInUser
+  //   );
+
+  //   setRecentlyCopiedItems(remainingItems);
+  //   setToolTip("All Unstarred Copied Items Removed!");
+  //   setShowTooltip(true);
+  //   setTimeout(() => {
+  //     setToolTip("");
+  //     setShowTooltip(false);
+  //   }, 2000);
+  // }
+
   function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
+    const maxItems = isSubscribed ? 15 : 5;
+    const minUnstarredItems = 1;
+
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
-        const maxitem = isSubscribed ? 15 : 5;
+        const starredItemsCount = recentlyCopiedItems.filter(
+          (item) => item.starred
+        ).length;
+        const unstarredItemsCount =
+          recentlyCopiedItems.length - starredItemsCount;
 
         if (
           !item.starred &&
-          // recentlyCopiedItems.filter((item) => !item.starred).length === 1 &&
-          recentlyCopiedItems.length >= maxitem
+          starredItemsCount >= maxItems - minUnstarredItems
         ) {
           setToolTip("At Least One Item Must Remain Unstarred!");
           setShowTooltip(true);
@@ -135,6 +208,7 @@ function Container({ userData, text }) {
           return item;
         }
 
+        // Toggle the starred status
         item.starred = !item.starred;
 
         if (item.starred) {
@@ -151,14 +225,21 @@ function Container({ userData, text }) {
       }
       return item;
     });
+
     setRecentlyCopiedItems(updatedItems);
   }
 
   function unstarAllItems() {
-    const updatedItems = recentlyCopiedItems.map((item) => ({
-      ...item,
-      starred: false,
-    }));
+    const updatedItems = recentlyCopiedItems.map((item) => {
+      if (item.email === userData.email || item.email === lastLoggedInUser) {
+        return {
+          ...item,
+          starred: false,
+        };
+      }
+      return item;
+    });
+
     setRecentlyCopiedItems(updatedItems);
     setToolTip("All Items Have Been Unstarred!");
     setShowTooltip(true);
@@ -170,23 +251,44 @@ function Container({ userData, text }) {
 
   const hasStarredItems = recentlyCopiedItems.some((item) => item.starred);
 
-  // Display logic
   let displayItems = [];
-  if (userData?.stripeSubscriptionId) {
-    displayItems = recentlyCopiedItems; // Show all items if subscribed
+  if (userData.email) {
+    displayItems = recentlyCopiedItems.filter(
+      (item) => item.email === userData.email
+    );
+    if (userData.stripeSubscriptionId) {
+      displayItems = displayItems;
+    } else {
+      displayItems = displayItems
+        .sort((a, b) => {
+          if (b.starred && !a.starred) return 1;
+          if (!b.starred && a.starred) return -1;
+          if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+          return b.id - a.id;
+        })
+        .slice(0, 5);
+    }
   } else {
     displayItems = recentlyCopiedItems
-      .sort((a, b) => b.starred - a.starred) // Sort by starred first
-      .slice(0, 5); // Show only the first 5 items
+      .filter((item) => item.email === lastLoggedInUser)
+      .sort((a, b) => {
+        if (b.starred && !a.starred) return 1;
+        if (!b.starred && a.starred) return -1;
+        if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+        return b.id - a.id;
+      })
+      .slice(0, 5);
   }
 
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center">
-        {recentlyCopiedItems.length > 0 && (
+        {displayItems.length > 0 && (
           <h1 className="text-base font-bold">Recently Copied Items:</h1>
         )}
-        {recentlyCopiedItems.length > 0 && (
+        {displayItems.length > 0 && (
           <div className="flex justify-center items-center gap-1">
             {hasStarredItems && (
               <>
@@ -230,7 +332,7 @@ function Container({ userData, text }) {
             userData={userData}
           />
         ))}
-        {recentlyCopiedItems.length === 0 && (
+        {displayItems.length === 0 && (
           <p className="text-base font-semibold text-center text-gray-500 mt-1">
             To Start:
             <br />
@@ -287,8 +389,15 @@ function Container({ userData, text }) {
               Want to save more than 5 of your recently copied text?
               <br /> Upgrade to CopyIn2Clicks Premium and save more of your
               copied items!
-              <br /> <a style={{color : ':#f59e0b', textDecoration : 'underline'}} href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank">✨ Click here to expand your clipboard and enhance your
-              productivity! ✨</a>
+              <br />{" "}
+              <a
+                style={{ color: ":#f59e0b", textDecoration: "underline" }}
+                href="https://extension-landing-page-zeta.vercel.app/premium"
+                target="_blank"
+              >
+                ✨ Click here to expand your clipboard and enhance your
+                productivity! ✨
+              </a>
             </p>
             <button
               onClick={() => setShowUpgradePopup(false)}
