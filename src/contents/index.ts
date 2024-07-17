@@ -409,7 +409,7 @@ async function saveCopiedText(hasText = "", target = null, format) {
     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
       let items = result?.recentlyCopiedItems || "[]";
       items = Array.from(JSON.parse(items));
-      const maxItems = items?.length > 5 ? 15 : isSubscribed ? 15 : 5;
+      const maxItems = items.filter(item => item.email === lastUserEmail).length > 5 ? 15 : isSubscribed ? 15 : 5;
       // const maxItems = isSubscribed ? 15 : 5;
 
       if (selectedText === "" && !hasText) return;
@@ -433,11 +433,10 @@ async function saveCopiedText(hasText = "", target = null, format) {
       };
       items.unshift(newItem);
 
-      // If user is subscribed or not, and the items exceed the limit, remove the oldest unstarred item
-      while (items.length > maxItems) {
+      while (items.filter(item => item.email === lastUserEmail).length > maxItems) {
         let unstarredIndex = -1;
         for (let i = items.length - 1; i >= 0; i--) {
-          if (!items[i].starred) {
+          if (items[i].email === lastUserEmail && !items[i].starred) {
             unstarredIndex = i;
             break;
           }
@@ -450,6 +449,23 @@ async function saveCopiedText(hasText = "", target = null, format) {
         }
       }
 
+      if (items.filter(item => item.email === userEmail).length > 15) {
+        console.log("YES MATCHED CONFITOIOJ");
+        const lastIndex = items.map(item => item.email).lastIndexOf(userEmail);
+        console.log('lastIndexlastIndex', lastIndex);
+        if (lastIndex !== -1 && !items[lastIndex].starred) {
+          items.splice(lastIndex, 1);
+        } else {
+          for (let i = items.length - 1; i >= 0; i--) {
+            if (items[i].email === userEmail && !items[i].starred) {
+              items.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+
+      console.log(items.filter(item => item.email === userEmail).length, userEmail,"itemssss===>", items); // Replace
       await chrome.storage.local.set({
         recentlyCopiedItems: JSON.stringify(items),
       });
@@ -477,6 +493,7 @@ async function saveCopiedText(hasText = "", target = null, format) {
     });
   });
 }
+
 
 function resetEndBracketOnly() {
   endNode = null;

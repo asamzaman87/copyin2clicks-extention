@@ -154,33 +154,6 @@ function Container({ userData, text, lastLoggedInUser }) {
     }, 2000);
   }
 
-  // function clearCopiedItems() {
-  //   const unstarredItems = recentlyCopiedItems.filter(
-  //     (item) => item.email === userData.email || item.email === lastLoggedInUser && !item.starred
-  //   );
-
-  //   if (unstarredItems.length === 0) {
-  //     setToolTip("No Unstarred Items To Delete!");
-  //     setShowTooltip(true);
-  //     setTimeout(() => {
-  //       setToolTip("");
-  //       setShowTooltip(false);
-  //     }, 2000);
-  //     return;
-  //   }
-
-  //   const remainingItems = recentlyCopiedItems.filter(
-  //     (item) => item.starred && item.email !== userData.email  || item.email !==lastLoggedInUser
-  //   );
-
-  //   setRecentlyCopiedItems(remainingItems);
-  //   setToolTip("All Unstarred Copied Items Removed!");
-  //   setShowTooltip(true);
-  //   setTimeout(() => {
-  //     setToolTip("");
-  //     setShowTooltip(false);
-  //   }, 2000);
-  // }
 
   function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
