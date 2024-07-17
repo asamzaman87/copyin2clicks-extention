@@ -162,7 +162,7 @@ const renderErrorPopup = (errorMessage: string) => {
     errorPopup.style.opacity = "0";
     setTimeout(() => {
       errorPopup.remove();
-    }, 500);
+    }, 300);
   }, 1500); // Remove error popup after 3 seconds
 };
 
@@ -210,7 +210,7 @@ const renderUpgradePopup = (message: string, showOkButton: boolean) => {
       upgradePopup.style.opacity = "0";
       setTimeout(() => {
         upgradePopup.remove();
-      }, 200);
+      }, 500);
     }, 3000); // Remove upgrade popup after 3 seconds
   }
 };
@@ -409,7 +409,12 @@ async function saveCopiedText(hasText = "", target = null, format) {
     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
       let items = result?.recentlyCopiedItems || "[]";
       items = Array.from(JSON.parse(items));
-      const maxItems = items.filter(item => item.email === lastUserEmail).length > 5 ? 15 : isSubscribed ? 15 : 5;
+      const maxItems =
+        items.filter((item) => item.email === lastUserEmail).length > 5
+          ? 15
+          : isSubscribed
+            ? 15
+            : 5;
       // const maxItems = isSubscribed ? 15 : 5;
 
       if (selectedText === "" && !hasText) return;
@@ -419,10 +424,10 @@ async function saveCopiedText(hasText = "", target = null, format) {
 
       if (countWords(textToCopy) > maxWords && !isSubscribed) {
         renderUpgradePopup(
-          `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+          `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
           true
         );
-        return;
+        // return;
       }
 
       const newItem = {
@@ -430,10 +435,13 @@ async function saveCopiedText(hasText = "", target = null, format) {
         text: hasText || selectedText,
         starred: false,
         email: userEmail, // Include user email in the item
+        // status: userData?.message === 'Unauthorize' ? 'notAuthorized' : 'authorized'
       };
       items.unshift(newItem);
 
-      while (items.filter(item => item.email === lastUserEmail).length > maxItems) {
+      while (
+        items.filter((item) => item.email === lastUserEmail).length > maxItems
+      ) {
         let unstarredIndex = -1;
         for (let i = items.length - 1; i >= 0; i--) {
           if (items[i].email === lastUserEmail && !items[i].starred) {
@@ -449,10 +457,12 @@ async function saveCopiedText(hasText = "", target = null, format) {
         }
       }
 
-      if (items.filter(item => item.email === userEmail).length > 15) {
+      if (items.filter((item) => item.email === userEmail).length > 15) {
         console.log("YES MATCHED CONFITOIOJ");
-        const lastIndex = items.map(item => item.email).lastIndexOf(userEmail);
-        console.log('lastIndexlastIndex', lastIndex);
+        const lastIndex = items
+          .map((item) => item.email)
+          .lastIndexOf(userEmail);
+        console.log("lastIndexlastIndex", lastIndex);
         if (lastIndex !== -1 && !items[lastIndex].starred) {
           items.splice(lastIndex, 1);
         } else {
@@ -465,7 +475,12 @@ async function saveCopiedText(hasText = "", target = null, format) {
         }
       }
 
-      console.log(items.filter(item => item.email === userEmail).length, userEmail,"itemssss===>", items); // Replace
+      console.log(
+        items.filter((item) => item.email === userEmail).length,
+        userEmail,
+        "itemssss===>",
+        items
+      ); // Replace
       await chrome.storage.local.set({
         recentlyCopiedItems: JSON.stringify(items),
       });
@@ -493,7 +508,6 @@ async function saveCopiedText(hasText = "", target = null, format) {
     });
   });
 }
-
 
 function resetEndBracketOnly() {
   endNode = null;
