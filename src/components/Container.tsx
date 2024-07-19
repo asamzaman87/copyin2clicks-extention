@@ -227,7 +227,7 @@ function Container({ userData, text, lastLoggedInUser }) {
   let displayItems = [];
   if (userData.email) {
     displayItems = recentlyCopiedItems.filter(
-      (item) => item.email === userData.email
+      (item) => item.email === userData.email && !item.isLogout
     );
     if (userData.stripeSubscriptionId) {
       displayItems = displayItems;
@@ -245,13 +245,15 @@ function Container({ userData, text, lastLoggedInUser }) {
   } else {
     displayItems = recentlyCopiedItems
       .filter((item) => item.email === lastLoggedInUser)
-      .sort((a, b) => {
-        if (b.starred && !a.starred) return 1;
-        if (!b.starred && a.starred) return -1;
-        if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+      .sort((a, b) => b.starred - a.starred || b.id -a.id) // Sort by starred first
 
-        return b.id - a.id;
-      })
+      // .sort((a, b) => {
+      //   if (b.starred && !a.starred) return 1;
+      //   if (!b.starred && a.starred) return -1;
+      //   if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+      //   return b.id - a.id;
+      // })
       .slice(0, 5);
   }
 
