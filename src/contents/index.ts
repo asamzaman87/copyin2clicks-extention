@@ -5,6 +5,12 @@ export const config: PlasmoCSConfig = {
   all_frames: true,
 };
 
+interface UserData {
+  stripeSubscriptionId?: string;
+  email?: string;
+  message: string;
+}
+
 let startNode = null;
 let endNode = null;
 let selectedText = "";
@@ -13,7 +19,7 @@ const bracketStartElementClass = "copy-in-click-ext-bracket-start";
 const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
-let userData = [];
+let userData: UserData | null = null;
 
 const fetchUserData = () => {
   chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
@@ -245,7 +251,7 @@ document.addEventListener("keydown", function (event) {
           }
           const selection = window.getSelection().toString();
           if (selection) {
-            saveCopiedText(selection, target, format);
+            saveCopiedText(selection, target, format, useStandardCopy);
           }
         }
       }
@@ -325,7 +331,7 @@ document.addEventListener("click", function (event) {
                 (
                   target as HTMLInputElement | HTMLTextAreaElement
                 ).setSelectionRange(openingBracketIndex + 1, cursorPosition);
-                saveCopiedText(selectedText, target, format);
+                saveCopiedText(selectedText, target, format, false);
               } else {
                 const errorMessage =
                   "CopyIn2Clicks Error: Closing Bracket Must be Placed After the Opening Bracket";
@@ -393,12 +399,11 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
-async function saveCopiedText(hasText = "", target = null, format) {
+async function saveCopiedText(hasText = "", target = null, format, useStandardCopy) {
   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
     const lastUserEmail = result.lastLoggedInUser;
-    console.log(lastUserEmail?.replace(/"/g, ""), "lastUserEmaillastUserEmail");
     const isSubscribed = userData?.stripeSubscriptionId;
-    const userEmail = userData?.email || lastUserEmail?.replace(/"/g, ""); // Get the user email
+    const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
     console.log("userEmail", userEmail);
 
     // Function to count words in a string
@@ -415,7 +420,6 @@ async function saveCopiedText(hasText = "", target = null, format) {
           : isSubscribed
             ? 15
             : 5;
-      // const maxItems = isSubscribed ? 15 : 5;
 
       if (selectedText === "" && !hasText) return;
 
@@ -423,19 +427,26 @@ async function saveCopiedText(hasText = "", target = null, format) {
       const textToCopy = hasText || selectedText;
 
       if (countWords(textToCopy) > maxWords && !isSubscribed) {
-        renderUpgradePopup(
-          `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-          true
-        );
-        // return;
+        if (useStandardCopy) {
+          renderUpgradePopup(
+            `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+            true
+          );
+        } else {
+          renderUpgradePopup(
+            `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+            true
+          );
+          return;
+        }
       }
+      
 
       const newItem = {
         id: new Date().getTime(),
         text: hasText || selectedText,
         starred: false,
         email: userEmail, // Include user email in the item
-        // status: userData?.message === 'Unauthorize' ? 'notAuthorized' : 'authorized'
       };
       items.unshift(newItem);
 
@@ -458,11 +469,9 @@ async function saveCopiedText(hasText = "", target = null, format) {
       }
 
       if (items.filter((item) => item.email === userEmail).length > 15) {
-        console.log("YES MATCHED CONFITOIOJ");
         const lastIndex = items
           .map((item) => item.email)
           .lastIndexOf(userEmail);
-        console.log("lastIndexlastIndex", lastIndex);
         if (lastIndex !== -1 && !items[lastIndex].starred) {
           items.splice(lastIndex, 1);
         } else {
@@ -475,12 +484,6 @@ async function saveCopiedText(hasText = "", target = null, format) {
         }
       }
 
-      console.log(
-        items.filter((item) => item.email === userEmail).length,
-        userEmail,
-        "itemssss===>",
-        items
-      ); // Replace
       await chrome.storage.local.set({
         recentlyCopiedItems: JSON.stringify(items),
       });
@@ -533,7 +536,7 @@ function selectTextBetweenBrackets(target, format) {
       renderErrorPopup("CopyIn2Clicks Error: No text found between brackets");
       resetEndBracketOnly();
     } else {
-      saveCopiedText(selectedText, target, format);
+      saveCopiedText(selectedText, target, format, false);
     }
   }
 }

@@ -9,11 +9,16 @@ import Header from "~components/Header";
 import Tooltip from "~components/Tooltip";
 import "~style.css";
 
+interface userData {
+  stripeSubscriptionId?: string;
+  email?: string;
+}
+
 function IndexPopup() {
   const storage = new Storage({ area: "local" });
   const [error, setError] = useState(null);
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState<userData | []>([]);
   const [text,setText] = useState('Alt/Option')
 
   const [lastLoggedInUser, setLastLoggdInUser] = useStorage(
@@ -27,7 +32,7 @@ function IndexPopup() {
 
 
 
-  const getUserDataFromStorage = () => {
+  const getUserDataFromStorage = (): Promise<userData | null> => {
     return new Promise((resolve, reject) => {
       chrome.storage.sync.get("userData", (result) => {
         if (chrome.runtime.lastError) {
