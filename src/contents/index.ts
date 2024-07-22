@@ -399,7 +399,12 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
-async function saveCopiedText(hasText = "", target = null, format, useStandardCopy) {
+async function saveCopiedText(
+  hasText = "",
+  target = null,
+  format,
+  useStandardCopy
+) {
   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
     const lastUserEmail = result.lastLoggedInUser;
     const isSubscribed = userData?.stripeSubscriptionId;
@@ -440,14 +445,14 @@ async function saveCopiedText(hasText = "", target = null, format, useStandardCo
           return;
         }
       }
-      console.log(userData.message, 'ffff')
+      console.log(userData.message, "ffff");
 
       const newItem = {
         id: new Date().getTime(),
         text: hasText || selectedText,
         starred: false,
         email: userEmail, // Include user email in the item
-        isLogout : userData.message ==='Unauthorized' ? true : false
+        isLogout: userData.message === "Unauthorized" ? true : false,
       };
       items.unshift(newItem);
 
@@ -497,7 +502,7 @@ async function saveCopiedText(hasText = "", target = null, format, useStandardCo
           div.appendChild(range.cloneContents());
         }
         const html = div.innerHTML;
-        console.log(html, 'hhhhhh'); // Check if the HTML includes color styles
+        console.log(html, "hhhhhh"); // Check if the HTML includes color styles
 
         await navigator.clipboard.write([
           new ClipboardItem({

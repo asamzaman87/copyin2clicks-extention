@@ -97,31 +97,19 @@ function Container({ userData, text, lastLoggedInUser }) {
     let displayItems = [];
     if (userData.email) {
       displayItems = recentlyCopiedItems.filter(
-        (item) => item.email === userData.email
+        (item) => item.email === userData.email && !item.isLogout
       );
       if (userData.stripeSubscriptionId) {
         displayItems = displayItems;
       } else {
         displayItems = displayItems
-          .sort((a, b) => {
-            if (b.starred && !a.starred) return 1;
-            if (!b.starred && a.starred) return -1;
-            if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
-
-            return b.id - a.id;
-          })
+          .sort((a, b) => b.starred - a.starred || b.id - a.id)
           .slice(0, 5);
       }
     } else {
       displayItems = recentlyCopiedItems
-        .filter((item) => item.email === lastLoggedInUser)
-        .sort((a, b) => {
-          if (b.starred && !a.starred) return 1;
-          if (!b.starred && a.starred) return -1;
-          if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
-
-          return b.id - a.id;
-        })
+        .filter((item) => item.email === lastLoggedInUser && item.isLogout)
+        .sort((a, b) => b.starred - a.starred || b.id - a.id)
         .slice(0, 5);
     }
 
@@ -154,20 +142,27 @@ function Container({ userData, text, lastLoggedInUser }) {
     }, 2000);
   }
 
-
   function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
     const maxItems = isSubscribed ? 15 : 5;
     const minUnstarredItems = 1;
-
+  
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
+        if (!item.isLogout && (!userData || !userData.email || !isSubscribed)) {
+          setToolTip("This item cannot be starred/unstarred!");
+          setShowTooltip(true);
+          setTimeout(() => {
+            setToolTip("");
+            setShowTooltip(false);
+          }, 2000);
+          return item;
+        }
+  
         const starredItemsCount = recentlyCopiedItems.filter(
           (item) => item.starred
         ).length;
-        const unstarredItemsCount =
-          recentlyCopiedItems.length - starredItemsCount;
-
+  
         if (
           !item.starred &&
           starredItemsCount >= maxItems - minUnstarredItems
@@ -180,16 +175,16 @@ function Container({ userData, text, lastLoggedInUser }) {
           }, 2000);
           return item;
         }
-
+  
         // Toggle the starred status
         item.starred = !item.starred;
-
+  
         if (item.starred) {
           setToolTip("Copied Item Starred!");
         } else {
           setToolTip("Copied Item Unstarred!");
         }
-
+  
         setShowTooltip(true);
         setTimeout(() => {
           setToolTip("");
@@ -198,13 +193,14 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
       return item;
     });
-
+  
     setRecentlyCopiedItems(updatedItems);
   }
+  
 
   function unstarAllItems() {
     const updatedItems = recentlyCopiedItems.map((item) => {
-      if (item.email === userData.email || item.email === lastLoggedInUser) {
+      if (item.email === userData.email || item.email === lastLoggedInUser && item.isLogout) {
         return {
           ...item,
           starred: false,
@@ -233,27 +229,13 @@ function Container({ userData, text, lastLoggedInUser }) {
       displayItems = displayItems;
     } else {
       displayItems = displayItems
-        .sort((a, b) => {
-          if (b.starred && !a.starred) return 1;
-          if (!b.starred && a.starred) return -1;
-          if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
-
-          return b.id - a.id;
-        })
+      .sort((a, b) => b.starred - a.starred || b.id -a.id) // Sort by starred first
         .slice(0, 5);
     }
   } else {
     displayItems = recentlyCopiedItems
       .filter((item) => item.email === lastLoggedInUser)
-      .sort((a, b) => b.starred - a.starred || b.id -a.id) // Sort by starred first
-
-      // .sort((a, b) => {
-      //   if (b.starred && !a.starred) return 1;
-      //   if (!b.starred && a.starred) return -1;
-      //   if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
-
-      //   return b.id - a.id;
-      // })
+      .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
       .slice(0, 5);
   }
 
@@ -311,13 +293,15 @@ function Container({ userData, text, lastLoggedInUser }) {
           <p className="text-base font-semibold text-center text-gray-500 mt-1">
             To Start:
             <br />
-            1. Hover over the text, press "{text}" on your keyboard while
+            1. Click on the extensions icon and pin the CopyIn2Clicks Extension.
+            <br />
+            2. Hover over the text, press "{text}" on your keyboard while
             clicking on your mouse pad.
             <br />
             2. While still pressing “{text}” move your mouse to the last letter
             and click again
             <br />
-            3. That’s it! Click, click and you’re done!
+            4. That’s it! Click, click and you’re done!
           </p>
         )}
       </div>
