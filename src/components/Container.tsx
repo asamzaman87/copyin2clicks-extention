@@ -144,9 +144,17 @@ function Container({ userData, text, lastLoggedInUser }) {
 
   function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
-    const maxItems = isSubscribed ? 15 : 5;
+    // const maxItems = isSubscribed ? 15 : 5;
+
+    const maxItems =
+      recentlyCopiedItems.filter((item) => item.email === lastLoggedInUser)
+        .length > 5
+        ? 15
+        : isSubscribed
+          ? 15
+          : 5;
     const minUnstarredItems = 1;
-  
+
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
         if (!item.isLogout && (!userData || !userData.email || !isSubscribed)) {
@@ -158,11 +166,11 @@ function Container({ userData, text, lastLoggedInUser }) {
           }, 2000);
           return item;
         }
-  
+
         const starredItemsCount = recentlyCopiedItems.filter(
           (item) => item.starred
         ).length;
-  
+
         if (
           !item.starred &&
           starredItemsCount >= maxItems - minUnstarredItems
@@ -175,16 +183,16 @@ function Container({ userData, text, lastLoggedInUser }) {
           }, 2000);
           return item;
         }
-  
+
         // Toggle the starred status
         item.starred = !item.starred;
-  
+
         if (item.starred) {
           setToolTip("Copied Item Starred!");
         } else {
           setToolTip("Copied Item Unstarred!");
         }
-  
+
         setShowTooltip(true);
         setTimeout(() => {
           setToolTip("");
@@ -193,14 +201,16 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
       return item;
     });
-  
+
     setRecentlyCopiedItems(updatedItems);
   }
-  
 
   function unstarAllItems() {
     const updatedItems = recentlyCopiedItems.map((item) => {
-      if (item.email === userData.email || item.email === lastLoggedInUser && item.isLogout) {
+      if (
+        item.email === userData.email ||
+        (item.email === lastLoggedInUser && item.isLogout)
+      ) {
         return {
           ...item,
           starred: false,
@@ -229,13 +239,21 @@ function Container({ userData, text, lastLoggedInUser }) {
       displayItems = displayItems;
     } else {
       displayItems = displayItems
-      .sort((a, b) => b.starred - a.starred || b.id -a.id) // Sort by starred first
+        .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
         .slice(0, 5);
     }
   } else {
     displayItems = recentlyCopiedItems
       .filter((item) => item.email === lastLoggedInUser)
-      .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
+      // .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
+      .sort((a, b) => {
+        if (b.starred && !a.starred) return 1;
+        if (!b.starred && a.starred) return -1;
+        if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
+
+        return b.id - a.id;
+      })
+
       .slice(0, 5);
   }
 

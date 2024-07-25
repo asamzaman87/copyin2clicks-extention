@@ -399,6 +399,127 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
+// async function saveCopiedText(
+//   hasText = "",
+//   target = null,
+//   format,
+//   useStandardCopy
+// ) {
+//   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
+//     const lastUserEmail = result.lastLoggedInUser;
+//     const isSubscribed = userData?.stripeSubscriptionId;
+//     const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
+//     console.log("userEmail", userEmail);
+
+//     // Function to count words in a string
+//     function countWords(text) {
+//       return text.split(/\s+/).length;
+//     }
+
+//     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
+//       let items = result?.recentlyCopiedItems || "[]";
+//       items = Array.from(JSON.parse(items));
+//       const maxItems =
+//         items.filter((item) => item.email === lastUserEmail).length > 5
+//           ? 15
+//           : isSubscribed
+//             ? 15
+//             : 5;
+
+//       if (selectedText === "" && !hasText) return;
+
+//       const maxWords = isSubscribed ? 5000 : 500;
+//       const textToCopy = hasText || selectedText;
+
+//       if (countWords(textToCopy) > maxWords && !isSubscribed) {
+//         if (useStandardCopy) {
+//           renderUpgradePopup(
+//             `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+//             true
+//           );
+//         } else {
+//           renderUpgradePopup(
+//             `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+//             true
+//           );
+//           return;
+//         }
+//       }
+//       console.log(userData.message, "ffff");
+
+//       const newItem = {
+//         id: new Date().getTime(),
+//         text: hasText || selectedText,
+//         starred: false,
+//         email: userEmail, // Include user email in the item
+//         isLogout: userData.message === "Unauthorized" ? true : false,
+//       };
+//       items.unshift(newItem);
+
+//       while (
+//         items.filter((item) => item.email === lastUserEmail).length > maxItems
+//       ) {
+//         let unstarredIndex = -1;
+//         for (let i = items.length - 1; i >= 0; i--) {
+//           if (items[i].email === lastUserEmail && !items[i].starred) {
+//             unstarredIndex = i;
+//             break;
+//           }
+//         }
+//         if (unstarredIndex !== -1) {
+//           items.splice(unstarredIndex, 1);
+//         } else {
+//           // If all items are starred, remove the oldest item
+//           items.pop();
+//         }
+//       }
+
+//       if (items.filter((item) => item.email === userEmail).length > 15) {
+//         const lastIndex = items
+//           .map((item) => item.email)
+//           .lastIndexOf(userEmail);
+//         if (lastIndex !== -1 && !items[lastIndex].starred) {
+//           items.splice(lastIndex, 1);
+//         } else {
+//           for (let i = items.length - 1; i >= 0; i--) {
+//             if (items[i].email === userEmail && !items[i].starred) {
+//               items.splice(i, 1);
+//               break;
+//             }
+//           }
+//         }
+//       }
+
+//       await chrome.storage.local.set({
+//         recentlyCopiedItems: JSON.stringify(items),
+//       });
+
+//       if (isSubscribed && format) {
+//         const selection = window.getSelection();
+//         const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+//         const div = document.createElement("div");
+//         if (range) {
+//           div.appendChild(range.cloneContents());
+//         }
+//         const html = div.innerHTML;
+//         console.log(html, "hhhhhh"); // Check if the HTML includes color styles
+
+//         await navigator.clipboard.write([
+//           new ClipboardItem({
+//             "text/plain": new Blob([newItem.text], { type: "text/plain" }),
+//             "text/html": new Blob([html], { type: "text/html" }),
+//           }),
+//         ]);
+//       } else {
+//         await navigator.clipboard.writeText(newItem.text);
+//       }
+
+//       isSelectionCompleted = true;
+//       setTimeout(() => renderPopup(), 500);
+//     });
+//   });
+// }
+
 async function saveCopiedText(
   hasText = "",
   target = null,
@@ -411,9 +532,29 @@ async function saveCopiedText(
     const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
     console.log("userEmail", userEmail);
 
-    // Function to count words in a string
+    // Function to count words in a string, excluding spaces and newlines
     function countWords(text) {
-      return text.split(/\s+/).length;
+      return text.trim().split(/\s+/).length;
+    }
+
+    // Function to truncate text to the first 500 words, preserving spaces and newlines
+    function truncateText(text, maxWords) {
+      const words = text.trim().split(/\s+/);
+      if (words.length <= maxWords) {
+        return text;
+      }
+
+      let wordCount = 0;
+      let index = 0;
+      while (wordCount < maxWords && index < text.length) {
+        if (!/\s/.test(text[index])) {
+          if (index === 0 || /\s/.test(text[index - 1])) {
+            wordCount++;
+          }
+        }
+        index++;
+      }
+      return text.slice(0, index);
     }
 
     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
@@ -429,9 +570,13 @@ async function saveCopiedText(
       if (selectedText === "" && !hasText) return;
 
       const maxWords = isSubscribed ? 5000 : 500;
-      const textToCopy = hasText || selectedText;
+      let textToCopy = hasText || selectedText;
+      let isTextTruncated = false;
 
       if (countWords(textToCopy) > maxWords && !isSubscribed) {
+        textToCopy = truncateText(textToCopy, maxWords);
+        isTextTruncated = true;
+
         if (useStandardCopy) {
           renderUpgradePopup(
             `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
@@ -449,7 +594,7 @@ async function saveCopiedText(
 
       const newItem = {
         id: new Date().getTime(),
-        text: hasText || selectedText,
+        text: textToCopy,
         starred: false,
         email: userEmail, // Include user email in the item
         isLogout: userData.message === "Unauthorized" ? true : false,
@@ -515,7 +660,9 @@ async function saveCopiedText(
       }
 
       isSelectionCompleted = true;
-      setTimeout(() => renderPopup(), 500);
+      if (!isTextTruncated || isSubscribed) {
+        setTimeout(() => renderPopup(), 500);
+      }
     });
   });
 }

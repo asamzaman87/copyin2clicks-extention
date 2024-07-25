@@ -7,7 +7,7 @@ function Header({
   userData,
   selectedKeyCombination,
   handleKeyCombinationChange,
-  setLastLoggdInUser
+  setLastLoggdInUser,
 }) {
   const storage = new Storage({ area: "local" });
 
@@ -22,8 +22,6 @@ function Header({
     });
   }, []);
 
-
-
   const [isOn, setIsOn] = useStorage(
     { key: "isOn", instance: new Storage({ area: "local" }) },
     true
@@ -36,15 +34,12 @@ function Header({
     { key: "format", instance: new Storage({ area: "local" }) },
     initialFormat
   );
-  const [lastLoggedInUser, setLastLoggedInUser] = useStorage(
-    {
-      key: "lastLoggedInUser",
-      instance: new Storage({
-        area: "local",
-      }),
-    },
-    
-  );
+  const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
+    key: "lastLoggedInUser",
+    instance: new Storage({
+      area: "local",
+    }),
+  });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -63,33 +58,32 @@ function Header({
     });
   };
 
-
   const handleRedirect = () => {
-    openOrFocusTab("https://extension-landing-page-zeta.vercel.app/");
+    openOrFocusTab("https://copyin2clicks.vercel.app/");
   };
 
   const redirectToLogin = () => {
-    openOrFocusTab("https://extension-landing-page-zeta.vercel.app/login");
+    openOrFocusTab("https://copyin2clicks.vercel.app/login");
   };
 
-  const redirectToPremium = ()=>{
-    openOrFocusTab("https://extension-landing-page-zeta.vercel.app/premium");
-  }
+  const redirectToPremium = () => {
+    openOrFocusTab("https://copyin2clicks.vercel.app/premium");
+  };
 
   const handleProfiletoggle = () => {
     setProfiledropdown(!profiledropdown);
-    if(userData.stripeSubscriptionId){
-      setFormat(true)
+    if (userData.stripeSubscriptionId) {
+      setFormat(true);
     }
   };
 
   const handleLogout = async () => {
-    setLastLoggdInUser(userData.email)
-    setLastLoggedInUser(userData.email)
+    setLastLoggdInUser(userData.email);
+    setLastLoggedInUser(userData.email);
 
     try {
       const res = await fetch(
-        "https://extension-landing-page-zeta.vercel.app/api/auth/signout?callbackUrl=/api/auth/session",
+        "https://copyin2clicks.vercel.app/api/auth/signout?callbackUrl=/api/auth/session",
         {
           method: "POST",
           headers: {
@@ -97,14 +91,14 @@ function Header({
             "Content-Type": "application/json",
           },
           body: await fetch(
-            "https://extension-landing-page-zeta.vercel.app/api/auth/csrf"
+            "https://copyin2clicks.vercel.app/api/auth/csrf"
           ).then((rs) => rs.text()),
         }
       );
       console.log("res", res);
 
       if (res) {
-        openOrFocusTab("https://extension-landing-page-zeta.vercel.app/login");
+        openOrFocusTab("https://copyin2clicks.vercel.app/login");
       }
     } catch (err) {
       console.log("Failed to logout");
@@ -131,7 +125,6 @@ function Header({
       setFormat(false);
     }
   }, [userData]);
-  
 
   return (
     <>
@@ -141,14 +134,12 @@ function Header({
             href="https://extension-landing-page-zeta.vercel.app/premium"
             target="_blank"
           > */}
-            <div
-              onClick={redirectToPremium}
-              className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-            >
-              {userData?.stripeSubscriptionId
-                ? "Manage Subscription"
-                : "Upgrade"}
-            </div>
+          <div
+            onClick={redirectToPremium}
+            className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
+          >
+            {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
+          </div>
           {/* </a> */}
         </div>
         <div
