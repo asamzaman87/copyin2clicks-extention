@@ -59,15 +59,15 @@ function Header({
   };
 
   const handleRedirect = () => {
-    openOrFocusTab("https://copyin2clicks.vercel.app/");
+    openOrFocusTab("https://www.copyin2clicks.com/");
   };
 
   const redirectToLogin = () => {
-    openOrFocusTab("https://copyin2clicks.vercel.app/login");
+    openOrFocusTab("https://www.copyin2clicks.com/login");
   };
 
   const redirectToPremium = () => {
-    openOrFocusTab("https://copyin2clicks.vercel.app/premium");
+    openOrFocusTab("https://www.copyin2clicks.com/premium");
   };
 
   const handleProfiletoggle = () => {
@@ -83,7 +83,7 @@ function Header({
 
     try {
       const res = await fetch(
-        "https://copyin2clicks.vercel.app/api/auth/signout?callbackUrl=/api/auth/session",
+        "https://www.copyin2clicks.com/api/auth/signout?callbackUrl=/api/auth/session",
         {
           method: "POST",
           headers: {
@@ -91,14 +91,14 @@ function Header({
             "Content-Type": "application/json",
           },
           body: await fetch(
-            "https://copyin2clicks.vercel.app/api/auth/csrf"
+            "https://www.copyin2clicks.com/api/auth/csrf"
           ).then((rs) => rs.text()),
         }
       );
       console.log("res", res);
 
       if (res) {
-        openOrFocusTab("https://copyin2clicks.vercel.app/login");
+        openOrFocusTab("https://www.copyin2clicks.com/login");
       }
     } catch (err) {
       console.log("Failed to logout");

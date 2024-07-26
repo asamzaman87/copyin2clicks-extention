@@ -399,6 +399,8 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
+
+
 // async function saveCopiedText(
 //   hasText = "",
 //   target = null,
@@ -411,9 +413,29 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 //     const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
 //     console.log("userEmail", userEmail);
 
-//     // Function to count words in a string
+//     // Function to count words in a string, excluding spaces and newlines
 //     function countWords(text) {
-//       return text.split(/\s+/).length;
+//       return text.trim().split(/\s+/).length;
+//     }
+
+//     // Function to truncate text to the first 500 words, preserving spaces and newlines
+//     function truncateText(text, maxWords) {
+//       const words = text.trim().split(/\s+/);
+//       if (words.length <= maxWords) {
+//         return text;
+//       }
+
+//       let wordCount = 0;
+//       let index = 0;
+//       while (wordCount < maxWords && index < text.length) {
+//         if (!/\s/.test(text[index])) {
+//           if (index === 0 || /\s/.test(text[index - 1])) {
+//             wordCount++;
+//           }
+//         }
+//         index++;
+//       }
+//       return text.slice(0, index);
 //     }
 
 //     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
@@ -429,9 +451,13 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 //       if (selectedText === "" && !hasText) return;
 
 //       const maxWords = isSubscribed ? 5000 : 500;
-//       const textToCopy = hasText || selectedText;
+//       let textToCopy = hasText || selectedText;
+//       let isTextTruncated = false;
 
 //       if (countWords(textToCopy) > maxWords && !isSubscribed) {
+//         textToCopy = truncateText(textToCopy, maxWords);
+//         isTextTruncated = true;
+
 //         if (useStandardCopy) {
 //           renderUpgradePopup(
 //             `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
@@ -449,7 +475,7 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 
 //       const newItem = {
 //         id: new Date().getTime(),
-//         text: hasText || selectedText,
+//         text: textToCopy,
 //         starred: false,
 //         email: userEmail, // Include user email in the item
 //         isLogout: userData.message === "Unauthorized" ? true : false,
@@ -515,10 +541,13 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 //       }
 
 //       isSelectionCompleted = true;
-//       setTimeout(() => renderPopup(), 500);
+//       if (!isTextTruncated || isSubscribed) {
+//         setTimeout(() => renderPopup(), 500);
+//       }
 //     });
 //   });
 // }
+
 
 async function saveCopiedText(
   hasText = "",
@@ -556,6 +585,9 @@ async function saveCopiedText(
       }
       return text.slice(0, index);
     }
+    function cleanExtraNewLines(text) {
+      return text.replace(/(\r\n|\n|\r){2,}/g, '\n').trim();
+    }
 
     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
       let items = result?.recentlyCopiedItems || "[]";
@@ -590,13 +622,15 @@ async function saveCopiedText(
           return;
         }
       }
+
       console.log(userData.message, "ffff");
 
       const newItem = {
         id: new Date().getTime(),
+        lastModifiedTimestamp : new Date().getTime(),
         text: textToCopy,
         starred: false,
-        email: userEmail, // Include user email in the item
+        email: userEmail,
         isLogout: userData.message === "Unauthorized" ? true : false,
       };
       items.unshift(newItem);
@@ -639,7 +673,10 @@ async function saveCopiedText(
         recentlyCopiedItems: JSON.stringify(items),
       });
 
-      if (isSubscribed && format) {
+      if (useStandardCopy) {
+        // Copy the full text to the clipboard
+        await navigator.clipboard.writeText(cleanExtraNewLines(hasText || selectedText));
+      } else if (isSubscribed && format) {
         const selection = window.getSelection();
         const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
         const div = document.createElement("div");
@@ -656,7 +693,7 @@ async function saveCopiedText(
           }),
         ]);
       } else {
-        await navigator.clipboard.writeText(newItem.text);
+        await navigator.clipboard.writeText(cleanExtraNewLines(newItem.text));
       }
 
       isSelectionCompleted = true;
@@ -666,6 +703,7 @@ async function saveCopiedText(
     });
   });
 }
+
 
 function resetEndBracketOnly() {
   endNode = null;

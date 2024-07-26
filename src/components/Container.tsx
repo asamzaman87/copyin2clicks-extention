@@ -186,6 +186,7 @@ function Container({ userData, text, lastLoggedInUser }) {
 
         // Toggle the starred status
         item.starred = !item.starred;
+        item.lastModifiedTimestamp = new Date().getTime();
 
         if (item.starred) {
           setToolTip("Copied Item Starred!");
@@ -214,6 +215,8 @@ function Container({ userData, text, lastLoggedInUser }) {
         return {
           ...item,
           starred: false,
+          lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
+
         };
       }
       return item;
@@ -247,13 +250,13 @@ function Container({ userData, text, lastLoggedInUser }) {
       .filter((item) => item.email === lastLoggedInUser)
       // .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
       .sort((a, b) => {
-        if (b.starred && !a.starred) return 1;
-        if (!b.starred && a.starred) return -1;
-        if (a.starred && b.starred) return a.id - b.id; // Ensure oldest starred items appear first
-
-        return b.id - a.id;
+        if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
+        if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+        if (a.starred && b.starred) return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+        if (!a.starred && !b.starred) return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+        return b.id - a.id; // Default fallback (should not be reached)
       })
-
+  
       .slice(0, 5);
   }
 
