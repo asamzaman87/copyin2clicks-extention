@@ -98,7 +98,7 @@ const renderPopup = () => {
 
   const popupText = isSubscribed
     ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!"
-    : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://extension-landing-page-zeta.vercel.app/premium" target = "_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
+    : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://www.copyin2clicks.com/premium" target = "_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
 
   // Add content to the popup
   popup.innerHTML = `
@@ -399,8 +399,6 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
-
-
 // async function saveCopiedText(
 //   hasText = "",
 //   target = null,
@@ -548,7 +546,6 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
 //   });
 // }
 
-
 async function saveCopiedText(
   hasText = "",
   target = null,
@@ -586,7 +583,7 @@ async function saveCopiedText(
       return text.slice(0, index);
     }
     function cleanExtraNewLines(text) {
-      return text.replace(/(\r\n|\n|\r){2,}/g, '\n').trim();
+      return text.replace(/(\r\n|\n|\r){2,}/g, "\n").trim();
     }
 
     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
@@ -605,18 +602,25 @@ async function saveCopiedText(
       let textToCopy = hasText || selectedText;
       let isTextTruncated = false;
 
-      if (countWords(textToCopy) > maxWords && !isSubscribed) {
+      if (countWords(textToCopy) > maxWords) {
         textToCopy = truncateText(textToCopy, maxWords);
         isTextTruncated = true;
-
-        if (useStandardCopy) {
-          renderUpgradePopup(
-            `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-            true
-          );
+        if (!isSubscribed) {
+          if (useStandardCopy) {
+            renderUpgradePopup(
+              `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+              true
+            );
+          } else {
+            renderUpgradePopup(
+              `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+              true
+            );
+            return;
+          }
         } else {
           renderUpgradePopup(
-            `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+            `Text has been truncated to the first 5000 words due to the limit for premium users.`,
             true
           );
           return;
@@ -627,7 +631,7 @@ async function saveCopiedText(
 
       const newItem = {
         id: new Date().getTime(),
-        lastModifiedTimestamp : new Date().getTime(),
+        lastModifiedTimestamp: new Date().getTime(),
         text: textToCopy,
         starred: false,
         email: userEmail,
@@ -675,7 +679,9 @@ async function saveCopiedText(
 
       if (useStandardCopy) {
         // Copy the full text to the clipboard
-        await navigator.clipboard.writeText(cleanExtraNewLines(hasText || selectedText));
+        await navigator.clipboard.writeText(
+          cleanExtraNewLines(hasText || selectedText)
+        );
       } else if (isSubscribed && format) {
         const selection = window.getSelection();
         const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
@@ -703,7 +709,6 @@ async function saveCopiedText(
     });
   });
 }
-
 
 function resetEndBracketOnly() {
   endNode = null;

@@ -103,13 +103,29 @@ function Container({ userData, text, lastLoggedInUser }) {
         displayItems = displayItems;
       } else {
         displayItems = displayItems
-          .sort((a, b) => b.starred - a.starred || b.id - a.id)
+          .sort((a, b) => {
+            if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
+            if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+            if (a.starred && b.starred)
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+            if (!a.starred && !b.starred)
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+            return b.id - a.id; // Default fallback (should not be reached)
+          })
           .slice(0, 5);
       }
     } else {
       displayItems = recentlyCopiedItems
         .filter((item) => item.email === lastLoggedInUser && item.isLogout)
-        .sort((a, b) => b.starred - a.starred || b.id - a.id)
+        .sort((a, b) => {
+          if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
+          if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+          if (a.starred && b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+          if (!a.starred && !b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+          return b.id - a.id; // Default fallback (should not be reached)
+        })
         .slice(0, 5);
     }
 
@@ -157,7 +173,7 @@ function Container({ userData, text, lastLoggedInUser }) {
 
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
-        if (!item.isLogout && (!userData || !userData.email || !isSubscribed)) {
+        if (!item.isLogout && (!userData || !userData.email)) {
           setToolTip("This item cannot be starred/unstarred!");
           setShowTooltip(true);
           setTimeout(() => {
@@ -216,7 +232,6 @@ function Container({ userData, text, lastLoggedInUser }) {
           ...item,
           starred: false,
           lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
-
         };
       }
       return item;
@@ -242,7 +257,15 @@ function Container({ userData, text, lastLoggedInUser }) {
       displayItems = displayItems;
     } else {
       displayItems = displayItems
-        .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
+        .sort((a, b) => {
+          if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
+          if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+          if (a.starred && b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+          if (!a.starred && !b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+          return b.id - a.id; // Default fallback (should not be reached)
+        })
         .slice(0, 5);
     }
   } else {
@@ -252,11 +275,13 @@ function Container({ userData, text, lastLoggedInUser }) {
       .sort((a, b) => {
         if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
         if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
-        if (a.starred && b.starred) return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
-        if (!a.starred && !b.starred) return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+        if (a.starred && b.starred)
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+        if (!a.starred && !b.starred)
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
         return b.id - a.id; // Default fallback (should not be reached)
       })
-  
+
       .slice(0, 5);
   }
 
