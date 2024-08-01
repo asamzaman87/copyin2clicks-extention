@@ -30,7 +30,7 @@ const fetchUserData = () => {
     } else {
       console.log("response", response);
       userData = response;
-      chrome.storage.sync.set({ userData: response });
+      chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat'  });
     }
   });
 };
@@ -743,8 +743,8 @@ function insertBrackets(textContent, x, y) {
   let caretPosition;
   if (document.caretRangeFromPoint) {
     caretPosition = document.caretRangeFromPoint(x, y);
-  } else if (document.caretPositionFromPoint) {
-    const position = document.caretPositionFromPoint(x, y);
+  } else if (document?.caretPositionFromPoint) {
+    const position = document?.caretPositionFromPoint(x, y);
     const range = document.createRange();
     range.setStart(position.offsetNode, position.offset);
     range.setEnd(position.offsetNode, position.offset);

@@ -31,9 +31,10 @@ function Header({
     true
   );
   const [format, setFormat] = useStorage(
-    { key: "format", instance: new Storage({ area: "local" }) },
+    { key: "format", instance: new Storage({ area: "sync" }) },
     initialFormat
   );
+
   const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
     key: "lastLoggedInUser",
     instance: new Storage({
@@ -118,13 +119,41 @@ function Header({
     setShowError(false); // Hide the error message
   };
 
-  useEffect(() => {
+  const checkIsFormatted = (result) => {
+    if(result?.isFormattedTxt === 'isToFormat'){
+      // setFormat(true);
+      return;
+    }
     if (userData?.stripeSubscriptionId) {
       setFormat(true);
     } else {
-      setFormat(false);
+     setFormat(false);
+   }
+  }
+
+  const handleStorageChange = (changes, areaName) => {
+    if (areaName === 'sync') {
+      if (changes.userData) {
+        // setUserData(changes.userData.newValue);
+      }
+      if (changes.format) {
+        // setFormat(changes.format.newValue);
+      }
     }
-  }, [userData?.stripeSubscriptionId]);
+  };
+
+  useEffect(() => {
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    chrome.storage.sync.get(['userData', 'format', 'isFormattedTxt'], (result) => {
+      checkIsFormatted(result)
+    })
+  }, []);
 
   return (
     <>
