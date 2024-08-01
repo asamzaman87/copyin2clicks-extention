@@ -608,12 +608,12 @@ async function saveCopiedText(
         if (!isSubscribed) {
           if (useStandardCopy) {
             renderUpgradePopup(
-              `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+              `Text has been copied but due to the free tier 500 word limit!<br/>only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
               true
             );
           } else {
             renderUpgradePopup(
-              `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+              `Free tier in CopyIn2Clicks is limited to 500 words!<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
               true
             );
             return;

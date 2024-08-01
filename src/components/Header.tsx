@@ -119,12 +119,12 @@ function Header({
   };
 
   useEffect(() => {
-    if (userData && userData.stripeSubscriptionId) {
+    if (userData?.stripeSubscriptionId) {
       setFormat(true);
     } else {
       setFormat(false);
     }
-  }, [userData]);
+  }, [userData?.stripeSubscriptionId]);
 
   return (
     <>
