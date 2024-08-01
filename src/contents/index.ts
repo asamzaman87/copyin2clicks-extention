@@ -623,7 +623,7 @@ async function saveCopiedText(
             `Text has been truncated to the first 5000 words due to the limit for premium users.`,
             true
           );
-          return;
+          // return;
         }
       }
 
@@ -703,7 +703,7 @@ async function saveCopiedText(
       }
 
       isSelectionCompleted = true;
-      if (!isTextTruncated || isSubscribed) {
+      if (!isTextTruncated) {
         setTimeout(() => renderPopup(), 500);
       }
     });
