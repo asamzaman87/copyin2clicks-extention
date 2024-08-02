@@ -30,7 +30,7 @@ const fetchUserData = () => {
     } else {
       console.log("response", response);
       userData = response;
-      chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat'  });
+      chrome.storage.sync.set({ userData: response });
     }
   });
 };
@@ -620,7 +620,7 @@ async function saveCopiedText(
           }
         } else {
           renderUpgradePopup(
-            `Text has been truncated to the first 5000 words due to the limit for premium users.`,
+            `Text has been truncated to the first 5000 words due to the limit for premium users!`,
             true
           );
           // return;
@@ -677,7 +677,7 @@ async function saveCopiedText(
         recentlyCopiedItems: JSON.stringify(items),
       });
 
-      if (useStandardCopy) {
+      if (useStandardCopy && !isSubscribed) {
         // Copy the full text to the clipboard
         await navigator.clipboard.writeText(
           cleanExtraNewLines(hasText || selectedText)
@@ -743,8 +743,8 @@ function insertBrackets(textContent, x, y) {
   let caretPosition;
   if (document.caretRangeFromPoint) {
     caretPosition = document.caretRangeFromPoint(x, y);
-  } else if (document?.caretPositionFromPoint) {
-    const position = document?.caretPositionFromPoint(x, y);
+  } else if (document.caretPositionFromPoint) {
+    const position = document.caretPositionFromPoint(x, y);
     const range = document.createRange();
     range.setStart(position.offsetNode, position.offset);
     range.setEnd(position.offsetNode, position.offset);

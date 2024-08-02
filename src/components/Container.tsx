@@ -97,7 +97,7 @@ function Container({ userData, text, lastLoggedInUser }) {
     let displayItems = [];
     if (userData.email) {
       displayItems = recentlyCopiedItems.filter(
-        (item) => item.email === userData.email && !item.isLogout
+        (item) => item.email === userData.email
       );
       if (userData.stripeSubscriptionId) {
         displayItems = displayItems;
@@ -116,7 +116,7 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
     } else {
       displayItems = recentlyCopiedItems
-        .filter((item) => item.email === lastLoggedInUser && item.isLogout)
+        .filter((item) => item.email === lastLoggedInUser)
         .sort((a, b) => {
           if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
           if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
@@ -173,15 +173,15 @@ function Container({ userData, text, lastLoggedInUser }) {
 
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
-        if (!item.isLogout && (!userData || !userData.email)) {
-          setToolTip("This item cannot be starred/unstarred!");
-          setShowTooltip(true);
-          setTimeout(() => {
-            setToolTip("");
-            setShowTooltip(false);
-          }, 2000);
-          return item;
-        }
+        // if (!item.isLogout && (!userData || !userData.email)) {
+        //   setToolTip("This item cannot be starred/unstarred!");
+        //   setShowTooltip(true);
+        //   setTimeout(() => {
+        //     setToolTip("");
+        //     setShowTooltip(false);
+        //   }, 2000);
+        //   return item;
+        // }
 
         const starredItemsCount = recentlyCopiedItems.filter(
           (item) => item.starred
@@ -250,8 +250,13 @@ function Container({ userData, text, lastLoggedInUser }) {
 
   let displayItems = [];
   if (userData.email) {
+    // const userHasItems = recentlyCopiedItems.some(
+    //   (item) => item.email === userData.email
+    // );
+    // console.log(userHasItems, "userhasitem");
+console.log(userData.email, 'current user : ')
     displayItems = recentlyCopiedItems.filter(
-      (item) => item.email === userData.email || !item.email
+      (item) => (item.email === userData.email) ||  !item.email
     );
     if (userData.stripeSubscriptionId) {
       displayItems = displayItems;
@@ -269,8 +274,16 @@ function Container({ userData, text, lastLoggedInUser }) {
         .slice(0, 5);
     }
   } else {
+    // const lastUserHasItems = recentlyCopiedItems.some(
+    //   (item) => item.email === lastLoggedInUser
+    // );
+    // console.log(lastUserHasItems, 'df')
     displayItems = recentlyCopiedItems
-      .filter((item) => item.email === lastLoggedInUser || !item.email)
+      .filter(
+        (item) =>
+          (item.email === lastLoggedInUser) || (!item.email)
+      )
+
       // .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
       .sort((a, b) => {
         if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
