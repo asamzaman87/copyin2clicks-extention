@@ -35,7 +35,8 @@ chrome.storage.sync.clear();
 
 const checkStorage = (response) => {
   chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
-    console.log("recentlyCopiedItems1212", JSON.parse(result?.recentlyCopiedItems || "[]"))
+    const items =  JSON.parse(result?.recentlyCopiedItems || "[]")
+    console.log("recentlyCopiedItems1212",items)
     console.log("recentlyCopiedLogoutItems1212", JSON.parse(result?.recentlyCopiedLogoutItems || "[]"))
   })
   chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat' });
@@ -63,8 +64,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
     console.log("changes1212", changes)
-    // if (changes?.userData?.newValue?.email && changes?.userData?.oldValue?.message === 'Unauthorized') {
-      if (userData?.email) {
+    if (changes?.userData?.newValue?.email && changes?.userData?.oldValue?.message === 'Unauthorized') {
         chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
           let itemsrecentlyCopiedItems = result?.recentlyCopiedItems || "[]";
           itemsrecentlyCopiedItems = Array.from(JSON.parse(itemsrecentlyCopiedItems));
@@ -77,20 +77,22 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
             await chrome.storage.local.set({
               recentlyCopiedItems: JSON.stringify([...itemsrecentlyCopiedItems, ...items.map(i => ({ ...i, email: userData?.email,isLogout: false }))]),
             });
-            // const rawResponse = await fetch('https://www.copyin2clicks.com/api/update-user', {
-            //   method: 'POST',
-            //   headers: {
-            //     'Accept': 'application/json',
-            //     'Content-Type': 'application/json'
-            //   },
-            //   body: JSON.stringify({ email: userData?.email })
-            // });
-            // const content = await rawResponse.json();
-            // console.log("CONTENT", content)
           }
       })
-    }else {
-      console.log("YES LOGG OUT CASE!!")
+    } else {
+      chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
+        console.log("YES LOGG OUT CASE!!", changes?.userData)
+        let items = result?.recentlyCopiedItems || "[]";
+        items = Array.from(JSON.parse(items));
+        const newLogOutArray = items.filter(i => i?.email == changes?.userData?.oldValue?.email)
+        const sortedData = newLogOutArray.sort((a, b) => b.id - a.id);
+        // Pick the latest 5 elements
+        const latestFiveElements = sortedData.slice(0, 5);
+        console.log(latestFiveElements, "latestFiveElements");
+        await chrome.storage.local.set({
+          recentlyCopiedLogoutItems: JSON.stringify(latestFiveElements?.map(l => ({...l, isLogout: true, email: null}))),
+        });
+      })
     }
     console.log("Updated userData:", userData);
   }

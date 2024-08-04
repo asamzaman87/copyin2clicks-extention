@@ -95,6 +95,8 @@ function Container({ userData, text, lastLoggedInUser }) {
   }
 
   function clearCopiedItems() {
+    console.log("DELETE ALLLL",userData, recentlyCopiedItems)
+    // return;
     // Calculate the displayItems before any operations
     let displayItems = [];
     if (userData.email) {
@@ -118,7 +120,7 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
     } else {
       displayItems = recentlyCopiedItems
-        .filter((item) => item.email === lastLoggedInUser)
+        // .filter((item) => item.email === lastLoggedInUser)
         .sort((a, b) => {
           if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
           if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
@@ -128,7 +130,7 @@ function Container({ userData, text, lastLoggedInUser }) {
             return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
           return b.id - a.id; // Default fallback (should not be reached)
         })
-        .slice(0, 5);
+        // .slice(0, 5);
     }
 
     // Filter unstarred items that are in displayItems
@@ -226,16 +228,26 @@ function Container({ userData, text, lastLoggedInUser }) {
   }
 
   function unstarAllItems() {
+    console.log("UNSTARR!!!!", recentlyCopiedItems, userData)
+    // return;
     const updatedItems = recentlyCopiedItems.map((item) => {
-      if (
-        item.email === userData.email ||
-        (item.email === lastLoggedInUser && item.isLogout)
-      ) {
-        return {
-          ...item,
+      if(userData?.email){
+        if (
+          item.email === userData.email ||
+          (item.email === lastLoggedInUser && item.isLogout)
+        ) {
+          return {
+            ...item,
+            starred: false,
+            lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
+          };
+        }
+      } else {
+       return {
+        ...item,
           starred: false,
-          lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
-        };
+          lastModifiedTimestamp: new Date().getTime(),
+       }
       }
       return item;
     });
@@ -258,7 +270,7 @@ function Container({ userData, text, lastLoggedInUser }) {
     //   (item) => item.email === userData.email
     // );
     // console.log(userHasItems, "userhasitem");
-console.log(userData.email, 'current user : ')
+    console.log(userData.email, 'current user : ')
     displayItems = recentlyCopiedItems.filter(
       (item) => (item.email === userData.email) ||  !item.email
     );

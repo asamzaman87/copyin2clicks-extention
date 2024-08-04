@@ -191,9 +191,10 @@ startxref
   }
 
 function onRemove(idToRemove) {
+  console.log("onRemove12", idToRemove)
+  // return;
   chrome.storage.local.get(["recentlyCopiedItems", "recentlyCopiedLogoutItems"], (result) => {
     let items = userData?.email ? result.recentlyCopiedItems ? JSON.parse(result.recentlyCopiedItems) : [] : result.recentlyCopiedLogoutItems ? JSON.parse(result.recentlyCopiedLogoutItems) : [];
-    
     // Find index of item with matching id
     const indexToRemove = items.findIndex(item => item.id === idToRemove);
     let storageCopyArrayName = 'recentlyCopiedLogoutItems'
@@ -202,7 +203,6 @@ function onRemove(idToRemove) {
     }
     if (indexToRemove !== -1) {
       const itemToRemove = items[indexToRemove];
-
       if (itemToRemove.isLogout) {
         // Only remove if isLogout is true
         items.splice(indexToRemove, 1); // Remove item from array
