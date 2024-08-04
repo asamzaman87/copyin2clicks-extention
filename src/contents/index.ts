@@ -21,6 +21,25 @@ const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
 let userData: UserData | null = null;
+const clearStorage = () => {
+  chrome.storage.local.clear(function() {
+    var error = chrome.runtime.lastError;
+    if (error) {
+        console.error(error);
+    }
+    // do something more
+});
+
+chrome.storage.sync.clear();
+}
+
+const checkStorage = (response) => {
+  chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
+    console.log("recentlyCopiedItems1212", JSON.parse(result?.recentlyCopiedItems || "[]"))
+    console.log("recentlyCopiedLogoutItems1212", JSON.parse(result?.recentlyCopiedLogoutItems || "[]"))
+  })
+  chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat' });
+}
 
 const fetchUserData = () => {
   chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
@@ -31,18 +50,8 @@ const fetchUserData = () => {
     } else {
       console.log("response", response);
       userData = response;
-      //   chrome.storage.local.clear(function() {
-      //     var error = chrome.runtime.lastError;
-      //     if (error) {
-      //         console.error(error);
-      //     }
-      //     // do something more
-      // });
-      // chrome.storage.sync.clear();
-      chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
-        console.log("recentlyCopiedLogoutItems1212", JSON.parse(result?.recentlyCopiedItems || "[]"))
-      })
-      chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat' });
+      // clearStorage();
+      checkStorage(response)
     }
   });
 };
@@ -54,32 +63,34 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
     console.log("changes1212", changes)
-    if (userData?.email) {
-      if (userData?.loginCount === 1) {
+    // if (changes?.userData?.newValue?.email && changes?.userData?.oldValue?.message === 'Unauthorized') {
+      if (userData?.email) {
         chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
-          let items = result?.recentlyCopiedLogoutItems || "[]";
-          items = Array.from(JSON.parse(items));
-
           let itemsrecentlyCopiedItems = result?.recentlyCopiedItems || "[]";
           itemsrecentlyCopiedItems = Array.from(JSON.parse(itemsrecentlyCopiedItems));
-
-          console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems)
-
-          await chrome.storage.local.set({
-            recentlyCopiedItems: JSON.stringify([...itemsrecentlyCopiedItems, ...items.map(i => ({ ...i, email: userData?.email }))]),
-          });
-          const rawResponse = await fetch('https://www.copyin2clicks.com/api/update-user', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email: userData?.email })
-          });
-          const content = await rawResponse.json();
-          console.log("CONTENT", content)
-        })
-      }
+          if (itemsrecentlyCopiedItems?.some(i => i?.email == userData?.email)) {
+            return;
+          } else {
+            let items = result?.recentlyCopiedLogoutItems || "[]";
+            items = Array.from(JSON.parse(items));
+            console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems)
+            await chrome.storage.local.set({
+              recentlyCopiedItems: JSON.stringify([...itemsrecentlyCopiedItems, ...items.map(i => ({ ...i, email: userData?.email,isLogout: false }))]),
+            });
+            // const rawResponse = await fetch('https://www.copyin2clicks.com/api/update-user', {
+            //   method: 'POST',
+            //   headers: {
+            //     'Accept': 'application/json',
+            //     'Content-Type': 'application/json'
+            //   },
+            //   body: JSON.stringify({ email: userData?.email })
+            // });
+            // const content = await rawResponse.json();
+            // console.log("CONTENT", content)
+          }
+      })
+    }else {
+      console.log("YES LOGG OUT CASE!!")
     }
     console.log("Updated userData:", userData);
   }
@@ -448,7 +459,8 @@ async function saveCopiedText(
   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
     const lastUserEmail = result.lastLoggedInUser;
     const isSubscribed = userData?.stripeSubscriptionId;
-    const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
+    // const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
+    const userEmail = userData?.email || null;
     console.log("userEmail", userEmail);
 
     // Function to count words in a string, excluding spaces and newlines
