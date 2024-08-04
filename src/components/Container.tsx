@@ -16,13 +16,15 @@ function Container({ userData, text, lastLoggedInUser }) {
   const [key, setKey] = useState("");
   const [recentlyCopiedItems, setRecentlyCopiedItems] = useStorage(
     {
-      key: "recentlyCopiedItems",
+      key: userData.email ? "recentlyCopiedItems" : "recentlyCopiedLogoutItems",
+      // key: "recentlyCopiedItems",
       instance: new Storage({
         area: "local",
       }),
     },
     []
   );
+  console.log(userData.email,"recentlyCopiedItems1212", recentlyCopiedItems)
   const storage = new Storage({ area: "local" });
   const [toolTip, setToolTip] = useStorage(
     { key: "alert", instance: storage },
@@ -148,7 +150,7 @@ function Container({ userData, text, lastLoggedInUser }) {
         item.starred ||
         !displayItems.some((displayItem) => displayItem.id === item.id)
     );
-
+    console.log("setRecentlyCopiedItems1", remainingItems)
     setRecentlyCopiedItems(remainingItems);
     setToolTip("All Unstarred Copied Items Removed!");
     setShowTooltip(true);
@@ -218,6 +220,7 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
       return item;
     });
+    console.log("setRecentlyCopiedItems2", updatedItems)
 
     setRecentlyCopiedItems(updatedItems);
   }
@@ -236,6 +239,7 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
       return item;
     });
+    console.log("setRecentlyCopiedItems3", updatedItems)
 
     setRecentlyCopiedItems(updatedItems);
     setToolTip("All Items Have Been Unstarred!");
@@ -297,14 +301,14 @@ console.log(userData.email, 'current user : ')
 
       .slice(0, 5);
   }
-
+  console.log(recentlyCopiedItems,"ddisplayItems", displayItems)
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center">
-        {displayItems.length > 0 && (
+        {recentlyCopiedItems.length > 0 && (
           <h1 className="text-base font-bold">Recently Copied Items:</h1>
         )}
-        {displayItems.length > 0 && (
+        {recentlyCopiedItems.length > 0 && (
           <div className="flex justify-center items-center gap-1">
             {hasStarredItems && (
               <>

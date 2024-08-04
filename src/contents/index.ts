@@ -9,6 +9,7 @@ interface UserData {
   stripeSubscriptionId?: string;
   email?: string;
   message: string;
+  loginCount?: string | number
 }
 
 let startNode = null;
@@ -30,7 +31,18 @@ const fetchUserData = () => {
     } else {
       console.log("response", response);
       userData = response;
-      chrome.storage.sync.set({ userData: response });
+      //   chrome.storage.local.clear(function() {
+      //     var error = chrome.runtime.lastError;
+      //     if (error) {
+      //         console.error(error);
+      //     }
+      //     // do something more
+      // });
+      // chrome.storage.sync.clear();
+      chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
+        console.log("recentlyCopiedLogoutItems1212", JSON.parse(result?.recentlyCopiedItems || "[]"))
+      })
+      chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat' });
     }
   });
 };
@@ -41,6 +53,34 @@ fetchUserData();
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
+    console.log("changes1212", changes)
+    if (userData?.email) {
+      if (userData?.loginCount === 1) {
+        chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
+          let items = result?.recentlyCopiedLogoutItems || "[]";
+          items = Array.from(JSON.parse(items));
+
+          let itemsrecentlyCopiedItems = result?.recentlyCopiedItems || "[]";
+          itemsrecentlyCopiedItems = Array.from(JSON.parse(itemsrecentlyCopiedItems));
+
+          console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems)
+
+          await chrome.storage.local.set({
+            recentlyCopiedItems: JSON.stringify([...itemsrecentlyCopiedItems, ...items.map(i => ({ ...i, email: userData?.email }))]),
+          });
+          const rawResponse = await fetch('https://www.copyin2clicks.com/api/update-user', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: userData?.email })
+          });
+          const content = await rawResponse.json();
+          console.log("CONTENT", content)
+        })
+      }
+    }
     console.log("Updated userData:", userData);
   }
 });
@@ -399,153 +439,6 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
-// async function saveCopiedText(
-//   hasText = "",
-//   target = null,
-//   format,
-//   useStandardCopy
-// ) {
-//   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
-//     const lastUserEmail = result.lastLoggedInUser;
-//     const isSubscribed = userData?.stripeSubscriptionId;
-//     const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
-//     console.log("userEmail", userEmail);
-
-//     // Function to count words in a string, excluding spaces and newlines
-//     function countWords(text) {
-//       return text.trim().split(/\s+/).length;
-//     }
-
-//     // Function to truncate text to the first 500 words, preserving spaces and newlines
-//     function truncateText(text, maxWords) {
-//       const words = text.trim().split(/\s+/);
-//       if (words.length <= maxWords) {
-//         return text;
-//       }
-
-//       let wordCount = 0;
-//       let index = 0;
-//       while (wordCount < maxWords && index < text.length) {
-//         if (!/\s/.test(text[index])) {
-//           if (index === 0 || /\s/.test(text[index - 1])) {
-//             wordCount++;
-//           }
-//         }
-//         index++;
-//       }
-//       return text.slice(0, index);
-//     }
-
-//     chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-//       let items = result?.recentlyCopiedItems || "[]";
-//       items = Array.from(JSON.parse(items));
-//       const maxItems =
-//         items.filter((item) => item.email === lastUserEmail).length > 5
-//           ? 15
-//           : isSubscribed
-//             ? 15
-//             : 5;
-
-//       if (selectedText === "" && !hasText) return;
-
-//       const maxWords = isSubscribed ? 5000 : 500;
-//       let textToCopy = hasText || selectedText;
-//       let isTextTruncated = false;
-
-//       if (countWords(textToCopy) > maxWords && !isSubscribed) {
-//         textToCopy = truncateText(textToCopy, maxWords);
-//         isTextTruncated = true;
-
-//         if (useStandardCopy) {
-//           renderUpgradePopup(
-//             `Text has been copied but due to the free tier 500 word limit.<br/>only the first 500 words will be saved.!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-//             true
-//           );
-//         } else {
-//           renderUpgradePopup(
-//             `Free tier in CopyIn2Clicks is limited to 500 words.<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://extension-landing-page-zeta.vercel.app/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-//             true
-//           );
-//           return;
-//         }
-//       }
-//       console.log(userData.message, "ffff");
-
-//       const newItem = {
-//         id: new Date().getTime(),
-//         text: textToCopy,
-//         starred: false,
-//         email: userEmail, // Include user email in the item
-//         isLogout: userData.message === "Unauthorized" ? true : false,
-//       };
-//       items.unshift(newItem);
-
-//       while (
-//         items.filter((item) => item.email === lastUserEmail).length > maxItems
-//       ) {
-//         let unstarredIndex = -1;
-//         for (let i = items.length - 1; i >= 0; i--) {
-//           if (items[i].email === lastUserEmail && !items[i].starred) {
-//             unstarredIndex = i;
-//             break;
-//           }
-//         }
-//         if (unstarredIndex !== -1) {
-//           items.splice(unstarredIndex, 1);
-//         } else {
-//           // If all items are starred, remove the oldest item
-//           items.pop();
-//         }
-//       }
-
-//       if (items.filter((item) => item.email === userEmail).length > 15) {
-//         const lastIndex = items
-//           .map((item) => item.email)
-//           .lastIndexOf(userEmail);
-//         if (lastIndex !== -1 && !items[lastIndex].starred) {
-//           items.splice(lastIndex, 1);
-//         } else {
-//           for (let i = items.length - 1; i >= 0; i--) {
-//             if (items[i].email === userEmail && !items[i].starred) {
-//               items.splice(i, 1);
-//               break;
-//             }
-//           }
-//         }
-//       }
-
-//       await chrome.storage.local.set({
-//         recentlyCopiedItems: JSON.stringify(items),
-//       });
-
-//       if (isSubscribed && format) {
-//         const selection = window.getSelection();
-//         const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-//         const div = document.createElement("div");
-//         if (range) {
-//           div.appendChild(range.cloneContents());
-//         }
-//         const html = div.innerHTML;
-//         console.log(html, "hhhhhh"); // Check if the HTML includes color styles
-
-//         await navigator.clipboard.write([
-//           new ClipboardItem({
-//             "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-//             "text/html": new Blob([html], { type: "text/html" }),
-//           }),
-//         ]);
-//       } else {
-//         await navigator.clipboard.writeText(newItem.text);
-//       }
-
-//       isSelectionCompleted = true;
-//       if (!isTextTruncated || isSubscribed) {
-//         setTimeout(() => renderPopup(), 500);
-//       }
-//     });
-//   });
-// }
-
 async function saveCopiedText(
   hasText = "",
   target = null,
@@ -586,15 +479,15 @@ async function saveCopiedText(
       return text.replace(/(\r\n|\n|\r){2,}/g, "\n").trim();
     }
 
-    chrome.storage.local.get(["recentlyCopiedItems"], async (result) => {
-      let items = result?.recentlyCopiedItems || "[]";
+    chrome.storage.local.get(["recentlyCopiedItems", "recentlyCopiedLogoutItems"], async (result) => {
+      let items = userData.email ? result?.recentlyCopiedItems : result?.recentlyCopiedLogoutItems || "[]";
       items = Array.from(JSON.parse(items));
-      const maxItems =
-        items.filter((item) => item.email === lastUserEmail).length > 5
-          ? 15
-          : isSubscribed
-            ? 15
-            : 5;
+      const maxItems = (userData.email && isSubscribed) ? 15 : 5;
+      // items.filter((item) => item.email === lastUserEmail).length > 5
+      //   ? 15
+      //   : isSubscribed
+      //     ? 15
+      //     : 5;
 
       if (selectedText === "" && !hasText) return;
 
@@ -672,9 +565,13 @@ async function saveCopiedText(
           }
         }
       }
+      let storageCopyArrayName = 'recentlyCopiedLogoutItems'
+      if (userData?.email) {
+        storageCopyArrayName = 'recentlyCopiedItems'
+      }
 
       await chrome.storage.local.set({
-        recentlyCopiedItems: JSON.stringify(items),
+        [storageCopyArrayName]: JSON.stringify(items),
       });
 
       if (useStandardCopy && !isSubscribed) {

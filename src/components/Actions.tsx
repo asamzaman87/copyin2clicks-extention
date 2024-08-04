@@ -190,41 +190,25 @@ startxref
     );
   }
 
-//  function onRemove(idToRemove) {
-//   chrome.storage.local.get(["recentlyCopiedItems"], (result) => {
-//     let items = result.recentlyCopiedItems ? JSON.parse(result.recentlyCopiedItems) : [];
-    
-//     // Find index of item with matching id
-//     const indexToRemove = items.findIndex(item => item.id === idToRemove);
-    
-//     if (indexToRemove !== -1) {
-//       items.splice(indexToRemove, 1); // Remove item from array
-//       chrome.storage.local.set({
-//         recentlyCopiedItems: JSON.stringify(items),
-//       });
-//       setToolTip("Removed!");
-//       setTimeout(() => {
-//         setToolTip("");
-//       }, 500);
-//     }
-//   });
-// }
-
 function onRemove(idToRemove) {
-  chrome.storage.local.get(["recentlyCopiedItems"], (result) => {
-    let items = result.recentlyCopiedItems ? JSON.parse(result.recentlyCopiedItems) : [];
+  chrome.storage.local.get(["recentlyCopiedItems", "recentlyCopiedLogoutItems"], (result) => {
+    let items = userData?.email ? result.recentlyCopiedItems ? JSON.parse(result.recentlyCopiedItems) : [] : result.recentlyCopiedLogoutItems ? JSON.parse(result.recentlyCopiedLogoutItems) : [];
     
     // Find index of item with matching id
     const indexToRemove = items.findIndex(item => item.id === idToRemove);
-    
+    let storageCopyArrayName = 'recentlyCopiedLogoutItems'
+    if(userData?.email){
+      storageCopyArrayName = 'recentlyCopiedItems'
+    }
     if (indexToRemove !== -1) {
       const itemToRemove = items[indexToRemove];
 
       if (itemToRemove.isLogout) {
         // Only remove if isLogout is true
         items.splice(indexToRemove, 1); // Remove item from array
+        
         chrome.storage.local.set({
-          recentlyCopiedItems: JSON.stringify(items),
+          [storageCopyArrayName]: JSON.stringify(items),
         });
 
         setToolTip("Removed!");
@@ -242,7 +226,7 @@ function onRemove(idToRemove) {
         // If user is logged in and trying to remove an item copied while logged in
         items.splice(indexToRemove, 1); // Remove item from array
         chrome.storage.local.set({
-          recentlyCopiedItems: JSON.stringify(items),
+          [storageCopyArrayName]: JSON.stringify(items),
         });
 
         setToolTip("Removed!");
