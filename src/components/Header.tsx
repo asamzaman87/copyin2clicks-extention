@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import ReactToolTip from "./ReactToolTip";
@@ -13,15 +13,6 @@ function Header({
 
   const initialFormat = userData?.stripeSubscriptionId ? true : false;
 
-  useEffect(() => {
-    storage.get("useStandardCopy").then((result) => {
-      if (result === undefined) {
-        storage.set("useStandardCopy", true);
-        setUseStandardCopy(true);
-      }
-    });
-  }, []);
-
   const [isOn, setIsOn] = useStorage(
     { key: "isOn", instance: new Storage({ area: "local" }) },
     true
@@ -31,7 +22,7 @@ function Header({
     true
   );
   const [format, setFormat] = useStorage(
-    { key: "format", instance: new Storage({ area: "sync" }) },
+    { key: "format", instance: new Storage({ area: "local" }) },
     initialFormat
   );
   const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
@@ -46,6 +37,10 @@ function Header({
   const [profiledropdown, setProfiledropdown] = useState(false);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
+
+  const dropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+
 
   const openOrFocusTab = (url) => {
     chrome.tabs.query({}, (tabs) => {
@@ -70,12 +65,14 @@ function Header({
     openOrFocusTab("https://www.copyin2clicks.com/premium");
   };
 
-  const handleProfiletoggle = () => {
+  const handleProfiletoggle = (e) => {
+    e.stopPropagation(); // Prevent event from bubbling up to the document
     setProfiledropdown(!profiledropdown);
-    if (userData.stripeSubscriptionId) {
-      setFormat(true);
-    }
   };
+  const handleSetting =(e)=>{
+    e.stopPropagation(); // Prevent event from bubbling up to the document
+    setDropdownOpen(!dropdownOpen)
+  }
 
   const handleLogout = async () => {
     setLastLoggdInUser(userData.email);
@@ -106,11 +103,15 @@ function Header({
   };
   const handleFormattingChange = () => {
     if (userData && userData.stripeSubscriptionId) {
-      setFormat(!format);
+      setFormat((prev) => {
+        const newFormat = !prev;
+        storage.set("format", newFormat);
+        return newFormat;
+      });
       setError("");
     } else {
       setError("Please upgrade to premium to use this feature.");
-      setShowError(true); // Show the error message
+      setShowError(true);
     }
   };
 
@@ -118,66 +119,68 @@ function Header({
     setShowError(false); // Hide the error message
   };
 
-  // useEffect(() => {
-  //   if (!userData?.stripeSubscriptionId) {
-  //     setFormat(false);
-  //   } else{
-  //     setFormat(true)
-  //   }
-
-  // }, [userData?.stripeSubscriptionId]);
-
-  const checkIsFormatted = (result) => {
-    if(result?.isFormattedTxt === 'isToFormat'){
-      // setFormat(true);
-      return;
-    }
-    if (userData?.stripeSubscriptionId) {
-      setFormat(true);
-    } else {
-     setFormat(false);
-   }
-  }
-
-  const handleStorageChange = (changes, areaName) => {
-    if (areaName === 'sync') {
-      if (changes.userData) {
-        // setUserData(changes.userData.newValue);
-      }
-      if (changes.format) {
-        // setFormat(changes.format.newValue);
-      }
-    }
-  };
 
   useEffect(() => {
-    chrome.storage.onChanged.addListener(handleStorageChange);
+    storage.get("useStandardCopy").then((result) => {
+      if (result === undefined) {
+        storage.set("useStandardCopy", true);
+        setUseStandardCopy(true);
+      }
+    });
+
+    storage.get("format").then((result) => {
+      if (result !== undefined) {
+        setFormat(result);
+      } else {
+        setFormat(initialFormat);
+      }
+    });
+
+  }, []);
+
+  useEffect(() => {
+    if (!userData?.stripeSubscriptionId) {
+      setFormat(false);
+    }
+  }, [userData]);
+
+
+  const handleClickOutside = useCallback((event) => {
+    console.log('outside click')
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target)
+    ) {
+      console.log('close drop')
+      setDropdownOpen(false);
+    }
+    if (
+      profileDropdownRef.current &&
+      !profileDropdownRef.current.contains(event.target)
+    ) {
+      console.log('close profie')
+      setProfiledropdown(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
 
-  useEffect(() => {
-    chrome.storage.sync.get(['userData', 'format', 'isFormattedTxt'], (result) => {
-      checkIsFormatted(result)
-    })
-  }, []);
 
   return (
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         <div className="">
-          {/* <a
-            href="https://extension-landing-page-zeta.vercel.app/premium"
-            target="_blank"
-          > */}
           <div
             onClick={redirectToPremium}
             className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
           >
             {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
           </div>
-          {/* </a> */}
         </div>
         <div
           className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
@@ -218,7 +221,7 @@ function Header({
             <button
               id="setting-ext-icon"
               className="text-white text-2xl font-bold"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick ={handleSetting}
             >
               ⚙️
             </button>
@@ -228,7 +231,9 @@ function Header({
               place="bottom-start"
             />
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 text-black">
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 text-black"
+              ref= {dropdownRef}
+              >
                 <div className="p-2">
                   <div className="flex justify-between items-center">
                     <div className="text-sm">Extension</div>
@@ -285,7 +290,10 @@ function Header({
             )}
           </div>
           {profiledropdown && (
-            <div className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black">
+            <div 
+            className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
+            ref={profileDropdownRef}
+            >
               <div className="p-2">
                 <div className="flex justify-end items-end cursor-pointer">
                   <div

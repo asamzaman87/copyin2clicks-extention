@@ -5,11 +5,12 @@ export const config: PlasmoCSConfig = {
   all_frames: true,
 };
 
+
 interface UserData {
   stripeSubscriptionId?: string;
   email?: string;
   message: string;
-  loginCount?: string | number
+  loginCount?: string | number;
 }
 
 let startNode = null;
@@ -22,25 +23,31 @@ let blinkingInterval;
 let targetElement = null;
 let userData: UserData | null = null;
 const clearStorage = () => {
-  chrome.storage.local.clear(function() {
+  chrome.storage.local.clear(function () {
     var error = chrome.runtime.lastError;
     if (error) {
-        console.error(error);
+      console.error(error);
     }
     // do something more
-});
+  });
 
-chrome.storage.sync.clear();
-}
+  chrome.storage.sync.clear();
+};
 
 const checkStorage = (response) => {
-  chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
-    const items =  JSON.parse(result?.recentlyCopiedItems || "[]")
-    console.log("recentlyCopiedItems1212",items)
-    console.log("recentlyCopiedLogoutItems1212", JSON.parse(result?.recentlyCopiedLogoutItems || "[]"))
-  })
-  chrome.storage.sync.set({ userData: response, isFormattedTxt: userData?.email ? 'isToFormat' : 'isNotToFormat' });
-}
+  chrome.storage.local.get(
+    ["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"],
+    async function (result) {
+      const items = JSON.parse(result?.recentlyCopiedItems || "[]");
+      console.log("recentlyCopiedItems1212", items);
+      console.log(
+        "recentlyCopiedLogoutItems1212",
+        JSON.parse(result?.recentlyCopiedLogoutItems || "[]")
+      );
+    }
+  );
+  chrome.storage.sync.set({ userData: response });
+};
 
 const fetchUserData = () => {
   chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
@@ -52,7 +59,7 @@ const fetchUserData = () => {
       console.log("response", response);
       userData = response;
       // clearStorage();
-      checkStorage(response)
+      checkStorage(response);
     }
   });
 };
@@ -63,36 +70,93 @@ fetchUserData();
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
-    console.log("changes1212", changes)
-    if (changes?.userData?.newValue?.email && changes?.userData?.oldValue?.message === 'Unauthorized') {
-        chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
+    console.log("changes1212", changes);
+    if (
+      changes?.userData?.newValue?.email &&
+      changes?.userData?.oldValue?.message === "Unauthorized"
+    ) {
+      if(changes?.userData?.newValue?.stripeSubscriptionId){
+        chrome.storage.local.set({ format: true }, () => {
+          console.log("Format toggle set to true due to subscription.");
+        });
+        //Set Toggle To true
+      }else {
+        chrome.storage.local.set({ format: false }, () => {
+          console.log("Format toggle set to false due to no subscription.");
+        });
+        //Set Toggle To false
+      }
+
+      chrome.storage.local.get(
+        [
+          "lastLoggedInUser",
+          "recentlyCopiedItems",
+          "recentlyCopiedLogoutItems",
+        ],
+        async function (result) {
           let itemsrecentlyCopiedItems = result?.recentlyCopiedItems || "[]";
-          itemsrecentlyCopiedItems = Array.from(JSON.parse(itemsrecentlyCopiedItems));
-          if (itemsrecentlyCopiedItems?.some(i => i?.email == userData?.email)) {
+          itemsrecentlyCopiedItems = Array.from(
+            JSON.parse(itemsrecentlyCopiedItems)
+          );
+          if (
+            itemsrecentlyCopiedItems?.some((i) => i?.email == userData?.email)
+          ) {
             return;
           } else {
             let items = result?.recentlyCopiedLogoutItems || "[]";
             items = Array.from(JSON.parse(items));
-            console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems)
-            await chrome.storage.local.set({
-              recentlyCopiedItems: JSON.stringify([...itemsrecentlyCopiedItems, ...items.map(i => ({ ...i, email: userData?.email,isLogout: false }))]),
-            });
+            console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems);
+            if (changes.userData.newValue.loginCount === 1) {
+              await chrome.storage.local.set({
+                recentlyCopiedItems: JSON.stringify([
+                  ...itemsrecentlyCopiedItems,
+                  ...items.map((i) => ({
+                    ...i,
+                    email: userData?.email,
+                    isLogout: false,
+                  })),
+                ]),
+              });
+            }
           }
-      })
+        }
+      );
     } else {
-      chrome.storage.local.get(["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"], async function (result) {
-        console.log("YES LOGG OUT CASE!!", changes?.userData)
-        let items = result?.recentlyCopiedItems || "[]";
-        items = Array.from(JSON.parse(items));
-        const newLogOutArray = items.filter(i => i?.email == changes?.userData?.oldValue?.email)
-        const sortedData = newLogOutArray.sort((a, b) => b.id - a.id);
-        // Pick the latest 5 elements
-        const latestFiveElements = sortedData.slice(0, 5);
-        console.log(latestFiveElements, "latestFiveElements");
-        await chrome.storage.local.set({
-          recentlyCopiedLogoutItems: JSON.stringify(latestFiveElements?.map(l => ({...l, isLogout: true, email: null}))),
-        });
-      })
+      //set false here to toggle
+      chrome.storage.local.get(
+        [
+          "lastLoggedInUser",
+          "recentlyCopiedItems",
+          "recentlyCopiedLogoutItems",
+        ],
+        async function (result) {
+          console.log("YES LOGG OUT CASE!!", changes?.userData);
+
+          let items = result?.recentlyCopiedItems || "[]";
+          items = Array.from(JSON.parse(items));
+
+          const newLogOutArray = items.filter(
+            (i) => i?.email == changes?.userData?.oldValue?.email
+          );
+          const sortedData = newLogOutArray.sort((a, b) => {
+            if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
+            if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+            if (a.starred && b.starred)
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+            if (!a.starred && !b.starred)
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
+            return b.id - a.id; // Default fallback (should not be reached)
+          });
+
+          // Pick the latest 5 elements
+          const latestFiveElements = sortedData
+            .slice(0, 5)
+            .map((l) => ({ ...l, isLogout: true, email: null }));
+          await chrome.storage.local.set({
+            recentlyCopiedLogoutItems: JSON.stringify(latestFiveElements),
+          });
+        }
+      );
     }
     console.log("Updated userData:", userData);
   }
@@ -249,7 +313,7 @@ const renderUpgradePopup = (message: string, showOkButton: boolean) => {
     </div>
     <div style="padding: 20px; padding-top: 8px;">
       <div style="padding:4px;color:#f59e0b;font-weight:bold;" >${message}</div>
-      ${showOkButton ? `<button id="okButton" style="margin-top: 10px; background-color: #f59e0b; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; outline: none;">OK</button>` : ""}
+      ${showOkButton ? `<button id="okButton" style="margin-top: 10px; background-color: #f59e0b; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; outline: none;">Ok</button>` : ""}
     </div>
   `;
   document.body.appendChild(upgradePopup);
@@ -278,6 +342,27 @@ function isEventInPopup(event) {
   return event.target.closest(".copy-in-click-ext-popup") !== null;
 }
 
+function clearSelectionInPopup() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return false;
+  for (let i = 0; i < selection.rangeCount; i++) {
+    const range = selection.getRangeAt(i);
+    let commonAncestor = range.commonAncestorContainer;
+
+    // If the common ancestor is a text node, get its parent element
+    if (commonAncestor.nodeType === Node.TEXT_NODE) {
+      commonAncestor = commonAncestor.parentElement;
+    }
+
+    // Check if the common ancestor is an element before using closest
+    if (commonAncestor && commonAncestor.closest(".copy-in-click-ext-popup")) {
+      selection.removeAllRanges();
+      return true;
+    }
+  }
+  return false;
+}
+
 // for default copy text
 
 document.addEventListener("keydown", function (event) {
@@ -288,7 +373,9 @@ document.addEventListener("keydown", function (event) {
       console.error("chrome.storage is not available.");
       return;
     }
-
+    if (clearSelectionInPopup()) {
+      return;
+    }
     chrome.storage.local.get(
       ["isOn", "useStandardCopy", "format"],
       function (result) {
@@ -325,6 +412,7 @@ document.addEventListener("click", function (event) {
       if (result.isOn === true || result.isOn === "true") {
         const keyCombination = result.key || "altKey";
         const format = result.format === true || result.format === "true";
+
         if (event[keyCombination.replaceAll('"', "")]) {
           if (isEventInPopup(event)) {
             return;
@@ -463,7 +551,6 @@ async function saveCopiedText(
     const isSubscribed = userData?.stripeSubscriptionId;
     // const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
     const userEmail = userData?.email || null;
-    console.log("userEmail", userEmail);
 
     // Function to count words in a string, excluding spaces and newlines
     function countWords(text) {
@@ -493,131 +580,142 @@ async function saveCopiedText(
       return text.replace(/(\r\n|\n|\r){2,}/g, "\n").trim();
     }
 
-    chrome.storage.local.get(["recentlyCopiedItems", "recentlyCopiedLogoutItems"], async (result) => {
-      let items = userData.email ? result?.recentlyCopiedItems : result?.recentlyCopiedLogoutItems || "[]";
-      items = Array.from(JSON.parse(items));
-      const maxItems = (userData.email && isSubscribed) ? 15 : 5;
-      // items.filter((item) => item.email === lastUserEmail).length > 5
-      //   ? 15
-      //   : isSubscribed
-      //     ? 15
-      //     : 5;
+    chrome.storage.local.get(
+      ["recentlyCopiedItems", "recentlyCopiedLogoutItems"],
+      async (result) => {
+        let items = userData?.email
+          ? result?.recentlyCopiedItems || "[]"
+          : result?.recentlyCopiedLogoutItems || "[]";
+        items = Array.from(JSON.parse(items));
+        const maxItems = userData?.email && isSubscribed ? 15 : 5;
+        // items.filter((item) => item.email === lastUserEmail).length > 5
+        //   ? 15
+        //   : isSubscribed
+        //     ? 15
+        //     : 5;
 
-      if (selectedText === "" && !hasText) return;
+        if (selectedText === "" && !hasText) return;
 
-      const maxWords = isSubscribed ? 5000 : 500;
-      let textToCopy = hasText || selectedText;
-      let isTextTruncated = false;
+        const maxWords = isSubscribed ? 5000 : 500;
+        let textToCopy = hasText || selectedText;
+        let isTextTruncated = false;
 
-      if (countWords(textToCopy) > maxWords) {
-        textToCopy = truncateText(textToCopy, maxWords);
-        isTextTruncated = true;
-        if (!isSubscribed) {
-          if (useStandardCopy) {
-            renderUpgradePopup(
-              `Text has been copied but due to the free tier 500 word limit!<br/>only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
-              true
-            );
+        if (countWords(textToCopy) > maxWords) {
+          textToCopy = truncateText(textToCopy, maxWords);
+          isTextTruncated = true;
+          if (!isSubscribed) {
+            if (useStandardCopy) {
+              renderUpgradePopup(
+                `Text has been copied but due to the free tier 500 word limit!<br/>Only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+                true
+              );
+            } else {
+              renderUpgradePopup(
+                `Free tier in CopyIn2Clicks is limited to 500 words!<br/>Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+                true
+              );
+              await navigator.clipboard.writeText(
+                cleanExtraNewLines(hasText || selectedText)
+              );
+              return;
+            }
           } else {
             renderUpgradePopup(
-              `Free tier in CopyIn2Clicks is limited to 500 words!<br/> Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+              `Text has been successfully copied to your clipboard, but only the first 5000 words have been saved in the extension!`,
               true
             );
-            return;
-          }
-        } else {
-          renderUpgradePopup(
-            `Text has been truncated to the first 5000 words due to the limit for premium users!`,
-            true
-          );
-          // return;
-        }
-      }
-
-      console.log(userData.message, "ffff");
-
-      const newItem = {
-        id: new Date().getTime(),
-        lastModifiedTimestamp: new Date().getTime(),
-        text: textToCopy,
-        starred: false,
-        email: userEmail,
-        isLogout: userData.message === "Unauthorized" ? true : false,
-      };
-      items.unshift(newItem);
-
-      while (
-        items.filter((item) => item.email === lastUserEmail).length > maxItems
-      ) {
-        let unstarredIndex = -1;
-        for (let i = items.length - 1; i >= 0; i--) {
-          if (items[i].email === lastUserEmail && !items[i].starred) {
-            unstarredIndex = i;
-            break;
+            // return;
           }
         }
-        if (unstarredIndex !== -1) {
-          items.splice(unstarredIndex, 1);
-        } else {
-          // If all items are starred, remove the oldest item
-          items.pop();
-        }
-      }
 
-      if (items.filter((item) => item.email === userEmail).length > 15) {
-        const lastIndex = items
-          .map((item) => item.email)
-          .lastIndexOf(userEmail);
-        if (lastIndex !== -1 && !items[lastIndex].starred) {
-          items.splice(lastIndex, 1);
-        } else {
+        const newItem = {
+          id: new Date().getTime(),
+          lastModifiedTimestamp: new Date().getTime(),
+          text: textToCopy,
+          starred: false,
+          email: userEmail,
+          isLogout: userData?.message === "Unauthorized" ? true : false,
+        };
+        items.unshift(newItem);
+        console.log("newItem", newItem);
+
+        while (
+          items.filter((item) => item.email === lastUserEmail || !item.email)
+            .length > maxItems
+        ) {
+          let unstarredIndex = -1;
           for (let i = items.length - 1; i >= 0; i--) {
-            if (items[i].email === userEmail && !items[i].starred) {
-              items.splice(i, 1);
+            if (
+              items[i].email === lastUserEmail ||
+              (items.email && !items[i].starred)
+            ) {
+              unstarredIndex = i;
               break;
             }
           }
+          if (unstarredIndex !== -1) {
+            items.splice(unstarredIndex, 1);
+          } else {
+            // If all items are starred, remove the oldest item
+            items.pop();
+          }
+        }
+
+        if (items.filter((item) => item.email === userEmail).length > 15) {
+          console.log("gggggg");
+          const lastIndex = items
+            .map((item) => item.email)
+            .lastIndexOf(userEmail);
+          if (lastIndex !== -1 && !items[lastIndex].starred) {
+            items.splice(lastIndex, 1);
+          } else {
+            for (let i = items.length - 1; i >= 0; i--) {
+              if (items[i].email === userEmail && !items[i].starred) {
+                items.splice(i, 1);
+                break;
+              }
+            }
+          }
+        }
+        let storageCopyArrayName = "recentlyCopiedLogoutItems";
+        if (userData?.email) {
+          storageCopyArrayName = "recentlyCopiedItems";
+        }
+        await chrome.storage.local.set({
+          [storageCopyArrayName]: JSON.stringify(items),
+        });
+        if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
+          console.log('hello , normal copy ')
+          // Copy the full text to the clipboard
+          await navigator.clipboard.writeText(
+            cleanExtraNewLines(hasText || selectedText)
+          );
+        } else if (isSubscribed && format  ) {
+          console.log('hello formatting')
+          const selection = window.getSelection();
+          const range =
+            selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+          const div = document.createElement("div");
+          if (range) {
+            div.appendChild(range.cloneContents());
+          }
+          const html = div.innerHTML;
+          console.log('Rich Text Copied',html)
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "text/plain": new Blob([newItem.text], { type: "text/plain" }),
+              "text/html": new Blob([html], { type: "text/html" }),
+            }),
+          ]);
+        } else {
+          await navigator.clipboard.writeText(cleanExtraNewLines(newItem.text));
+        }
+        isSelectionCompleted = true;
+        if (!isTextTruncated) {
+          setTimeout(() => renderPopup(), 500);
         }
       }
-      let storageCopyArrayName = 'recentlyCopiedLogoutItems'
-      if (userData?.email) {
-        storageCopyArrayName = 'recentlyCopiedItems'
-      }
-
-      await chrome.storage.local.set({
-        [storageCopyArrayName]: JSON.stringify(items),
-      });
-
-      if (useStandardCopy && !isSubscribed) {
-        // Copy the full text to the clipboard
-        await navigator.clipboard.writeText(
-          cleanExtraNewLines(hasText || selectedText)
-        );
-      } else if (isSubscribed && format) {
-        const selection = window.getSelection();
-        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-        const div = document.createElement("div");
-        if (range) {
-          div.appendChild(range.cloneContents());
-        }
-        const html = div.innerHTML;
-        console.log(html, "hhhhhh"); // Check if the HTML includes color styles
-
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-            "text/html": new Blob([html], { type: "text/html" }),
-          }),
-        ]);
-      } else {
-        await navigator.clipboard.writeText(cleanExtraNewLines(newItem.text));
-      }
-
-      isSelectionCompleted = true;
-      if (!isTextTruncated) {
-        setTimeout(() => renderPopup(), 500);
-      }
-    });
+    );
   });
 }
 

@@ -103,6 +103,8 @@ function IndexPopup() {
     }
   }, [selectedKeyCombination]);
 
+  
+
   return (
     <>
       <div className="w-[450px] min-h-[100px] max-h-[450px]">

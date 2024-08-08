@@ -24,7 +24,6 @@ function Container({ userData, text, lastLoggedInUser }) {
     },
     []
   );
-  console.log(userData.email,"recentlyCopiedItems1212", recentlyCopiedItems)
   const storage = new Storage({ area: "local" });
   const [toolTip, setToolTip] = useStorage(
     { key: "alert", instance: storage },
@@ -95,8 +94,6 @@ function Container({ userData, text, lastLoggedInUser }) {
   }
 
   function clearCopiedItems() {
-    console.log("DELETE ALLLL",userData, recentlyCopiedItems)
-    // return;
     // Calculate the displayItems before any operations
     let displayItems = [];
     if (userData.email) {
@@ -108,29 +105,29 @@ function Container({ userData, text, lastLoggedInUser }) {
       } else {
         displayItems = displayItems
           .sort((a, b) => {
-            if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
-            if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+            if (b.starred && !a.starred) return 1;
+            if (!b.starred && a.starred) return -1;
             if (a.starred && b.starred)
-              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
             if (!a.starred && !b.starred)
-              return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
-            return b.id - a.id; // Default fallback (should not be reached)
+              return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+            return b.id - a.id;
           })
           .slice(0, 5);
       }
     } else {
       displayItems = recentlyCopiedItems
-        // .filter((item) => item.email === lastLoggedInUser)
+        .filter((item) => item.email === lastLoggedInUser || item.isLogout)
         .sort((a, b) => {
-          if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
-          if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+          if (b.starred && !a.starred) return 1;
+          if (!b.starred && a.starred) return -1;
           if (a.starred && b.starred)
-            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
           if (!a.starred && !b.starred)
-            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
-          return b.id - a.id; // Default fallback (should not be reached)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+          return b.id - a.id;
         })
-        // .slice(0, 5);
+        .slice(0, 5);
     }
 
     // Filter unstarred items that are in displayItems
@@ -150,9 +147,9 @@ function Container({ userData, text, lastLoggedInUser }) {
     const remainingItems = recentlyCopiedItems.filter(
       (item) =>
         item.starred ||
-        !displayItems.some((displayItem) => displayItem.id === item.id)
+        !displayItems.some((displayItem) => displayItem.email === item.email)
     );
-    console.log("setRecentlyCopiedItems1", remainingItems)
+
     setRecentlyCopiedItems(remainingItems);
     setToolTip("All Unstarred Copied Items Removed!");
     setShowTooltip(true);
@@ -164,33 +161,21 @@ function Container({ userData, text, lastLoggedInUser }) {
 
   function toggleStar(id) {
     const isSubscribed = userData?.stripeSubscriptionId;
-    // const maxItems = isSubscribed ? 15 : 5;
+    const maxItems = userData.email && isSubscribed ? 15 : 5;
 
-    const maxItems =
-      recentlyCopiedItems.filter((item) => item.email === lastLoggedInUser)
-        .length > 5
-        ? 15
-        : isSubscribed
-          ? 15
-          : 5;
+    console.log("maxItems", maxItems);
     const minUnstarredItems = 1;
 
     const updatedItems = recentlyCopiedItems.map((item) => {
       if (item.id === id) {
-        // if (!item.isLogout && (!userData || !userData.email)) {
-        //   setToolTip("This item cannot be starred/unstarred!");
-        //   setShowTooltip(true);
-        //   setTimeout(() => {
-        //     setToolTip("");
-        //     setShowTooltip(false);
-        //   }, 2000);
-        //   return item;
-        // }
-
         const starredItemsCount = recentlyCopiedItems.filter(
-          (item) => item.starred
+          (item) =>
+            item.starred &&
+            (item.email === userData.email ||
+              item.email === lastLoggedInUser ||
+              !item.email)
         ).length;
-
+        console.log("starredItemsCount", starredItemsCount);
         if (
           !item.starred &&
           starredItemsCount >= maxItems - minUnstarredItems
@@ -222,36 +207,25 @@ function Container({ userData, text, lastLoggedInUser }) {
       }
       return item;
     });
-    console.log("setRecentlyCopiedItems2", updatedItems)
 
     setRecentlyCopiedItems(updatedItems);
   }
 
   function unstarAllItems() {
-    console.log("UNSTARR!!!!", recentlyCopiedItems, userData)
-    // return;
     const updatedItems = recentlyCopiedItems.map((item) => {
-      if(userData?.email){
-        if (
-          item.email === userData.email ||
-          (item.email === lastLoggedInUser && item.isLogout)
-        ) {
-          return {
-            ...item,
-            starred: false,
-            lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
-          };
-        }
-      } else {
-       return {
-        ...item,
+      if (
+        item?.email === userData?.email ||
+        item?.email === lastLoggedInUser ||
+        !item?.email
+      ) {
+        return {
+          ...item,
           starred: false,
-          lastModifiedTimestamp: new Date().getTime(),
-       }
+          lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
+        };
       }
       return item;
     });
-    console.log("setRecentlyCopiedItems3", updatedItems)
 
     setRecentlyCopiedItems(updatedItems);
     setToolTip("All Items Have Been Unstarred!");
@@ -266,61 +240,57 @@ function Container({ userData, text, lastLoggedInUser }) {
 
   let displayItems = [];
   if (userData.email) {
-    // const userHasItems = recentlyCopiedItems.some(
-    //   (item) => item.email === userData.email
-    // );
-    // console.log(userHasItems, "userhasitem");
-    console.log(userData.email, 'current user : ')
+    if (userData.loginCount === 1) {
+      displayItems = recentlyCopiedItems.filter((item) => item.isLogout);
+    }
     displayItems = recentlyCopiedItems.filter(
-      (item) => (item.email === userData.email) ||  !item.email
+      (item) => item.email === userData.email
     );
     if (userData.stripeSubscriptionId) {
-      displayItems = displayItems;
+      displayItems = displayItems.sort((a, b) => {
+        if (b.starred && !a.starred) return 1;
+        if (!b.starred && a.starred) return -1;
+        if (a.starred && b.starred)
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+        if (!a.starred && !b.starred)
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+        return b.id - a.id;
+      });
     } else {
       displayItems = displayItems
         .sort((a, b) => {
-          if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
-          if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+          if (b.starred && !a.starred) return 1;
+          if (!b.starred && a.starred) return -1;
           if (a.starred && b.starred)
-            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
           if (!a.starred && !b.starred)
-            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
-          return b.id - a.id; // Default fallback (should not be reached)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+          return b.id - a.id;
         })
         .slice(0, 5);
     }
   } else {
-    // const lastUserHasItems = recentlyCopiedItems.some(
-    //   (item) => item.email === lastLoggedInUser
-    // );
-    // console.log(lastUserHasItems, 'df')
     displayItems = recentlyCopiedItems
-      .filter(
-        (item) =>
-          (item.email === lastLoggedInUser) || (!item.email)
-      )
-
-      // .sort((a, b) => b.starred - a.starred || b.id - a.id) // Sort by starred first
+      .filter((item) => item.email === lastLoggedInUser || !item.email)
       .sort((a, b) => {
-        if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
-        if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
+        if (b.starred && !a.starred) return 1;
+        if (!b.starred && a.starred) return -1;
         if (a.starred && b.starred)
-          return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
         if (!a.starred && !b.starred)
-          return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
-        return b.id - a.id; // Default fallback (should not be reached)
+          return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+        return b.id - a.id;
       })
-
       .slice(0, 5);
   }
-  console.log(recentlyCopiedItems,"ddisplayItems", displayItems)
+
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center">
-        {recentlyCopiedItems.length > 0 && (
+        {displayItems.length > 0 && (
           <h1 className="text-base font-bold">Recently Copied Items:</h1>
         )}
-        {recentlyCopiedItems.length > 0 && (
+        {displayItems.length > 0 && (
           <div className="flex justify-center items-center gap-1">
             {hasStarredItems && (
               <>
