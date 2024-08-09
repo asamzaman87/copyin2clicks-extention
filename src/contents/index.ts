@@ -22,17 +22,17 @@ const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
 let userData: UserData | null = null;
-const clearStorage = () => {
-  chrome.storage.local.clear(function () {
-    var error = chrome.runtime.lastError;
-    if (error) {
-      console.error(error);
-    }
-    // do something more
-  });
+// const clearStorage = () => {
+//   chrome.storage.local.clear(function () {
+//     var error = chrome.runtime.lastError;
+//     if (error) {
+//       console.error(error);
+//     }
+//     // do something more
+//   });
 
-  chrome.storage.sync.clear();
-};
+//   chrome.storage.sync.clear();
+// };
 
 const checkStorage = (response) => {
   chrome.storage.local.get(
@@ -46,7 +46,7 @@ const checkStorage = (response) => {
       );
     }
   );
-  chrome.storage.sync.set({ userData: response });
+  // chrome.storage.sync.set({ userData: response });
 };
 
 const fetchUserData = () => {
@@ -59,6 +59,8 @@ const fetchUserData = () => {
       console.log("response", response);
       userData = response;
       // clearStorage();
+      chrome.storage.sync.set({ userData: response });
+
       checkStorage(response);
     }
   });
@@ -72,7 +74,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     userData = changes.userData.newValue;
     console.log("changes1212", changes);
     if (
-      changes?.userData?.newValue?.email &&
+      // changes?.userData?.newValue?.email &&
       changes?.userData?.oldValue?.message === "Unauthorized"
     ) {
       if(changes?.userData?.newValue?.stripeSubscriptionId){

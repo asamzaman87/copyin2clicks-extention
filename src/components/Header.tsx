@@ -176,10 +176,12 @@ function Header({
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         <div className="">
           <div
-            onClick={redirectToPremium}
+            // onClick={redirectToPremium}
             className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-          >
+          ><a href="https://www.copyin2clicks.com/premium" target="_blank">
+
             {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
+          </a>
           </div>
         </div>
         <div
