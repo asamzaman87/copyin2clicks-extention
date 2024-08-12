@@ -64,7 +64,7 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
   async function onCopyToClipboard(text: string) {
     if (!userData.stripeSubscriptionId) {
       setToolTip(
-        "Text has been copied to clipboard. Click on the CopyIn2Clicks extension to view!  Want to keep the original formatting? Click here to learn how to upgrade and enjoy enhanced copying features!"
+        "Text has been copied!"
       );
     } else {
       setToolTip("Copied");

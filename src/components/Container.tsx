@@ -339,12 +339,12 @@ function Container({ userData, text, lastLoggedInUser }) {
           <p className="text-base font-semibold text-center text-gray-500 mt-1">
             To Start:
             <br />
-            1. Click on the extensions icon and pin the CopyIn2Clicks Extension.
+            1. Click on the extensions icon and pin the CopyIn2Clicks extension.
             <br />
             2. Hover over the text, press "{text}" on your keyboard while
             clicking on your mouse pad.
             <br />
-            2. While still pressing “{text}” move your mouse to the last letter
+            3. While still pressing “{text}” move your mouse to the last letter
             and click again
             <br />
             4. That’s it! Click, click and you’re done!
@@ -397,7 +397,7 @@ function Container({ userData, text, lastLoggedInUser }) {
               <br />{" "}
               <a
                 style={{ color: ":#f59e0b", textDecoration: "underline" }}
-                href="https://extension-landing-page-zeta.vercel.app/premium"
+                href="https://www.copyin2clicks.com/premium"
                 target="_blank"
               >
                 ✨ Click here to expand your clipboard and enhance your

@@ -5,7 +5,6 @@ export const config: PlasmoCSConfig = {
   all_frames: true,
 };
 
-
 interface UserData {
   stripeSubscriptionId?: string;
   email?: string;
@@ -22,17 +21,6 @@ const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
 let userData: UserData | null = null;
-// const clearStorage = () => {
-//   chrome.storage.local.clear(function () {
-//     var error = chrome.runtime.lastError;
-//     if (error) {
-//       console.error(error);
-//     }
-//     // do something more
-//   });
-
-//   chrome.storage.sync.clear();
-// };
 
 const checkStorage = (response) => {
   chrome.storage.local.get(
@@ -77,16 +65,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       // changes?.userData?.newValue?.email &&
       changes?.userData?.oldValue?.message === "Unauthorized"
     ) {
-      if(changes?.userData?.newValue?.stripeSubscriptionId){
+      //Set Toggle To true
+      if (changes?.userData?.newValue?.stripeSubscriptionId) {
         chrome.storage.local.set({ format: true }, () => {
           console.log("Format toggle set to true due to subscription.");
         });
-        //Set Toggle To true
-      }else {
+      } else {
+        //Set Toggle To false
         chrome.storage.local.set({ format: false }, () => {
           console.log("Format toggle set to false due to no subscription.");
         });
-        //Set Toggle To false
       }
 
       chrome.storage.local.get(
@@ -164,7 +152,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
-const renderPopup = () => {
+const renderPopup = (target) => {
   const isSubscribed = userData?.stripeSubscriptionId;
 
   // Create overlay
@@ -191,10 +179,10 @@ const renderPopup = () => {
       window.getSelection().removeAllRanges();
       resetAll();
       // Clear brackets in input/textarea after clicking "OK"
-      if (targetElement) {
-        const inputValue = targetElement.value;
-        targetElement.value = inputValue.replace(/\[|\]/g, "");
-        targetElement = null;
+      if (target) {
+        const inputValue = target.value;
+        target.value = inputValue.replace(/\[|\]/g, "");
+        target = null;
       }
     }, 100);
   }
@@ -542,12 +530,7 @@ function addEndIcon(x, y, pageX, pageY, target, format) {
   }
 }
 
-async function saveCopiedText(
-  hasText = "",
-  target = null,
-  format,
-  useStandardCopy
-) {
+async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
     const lastUserEmail = result.lastLoggedInUser;
     const isSubscribed = userData?.stripeSubscriptionId;
@@ -608,7 +591,7 @@ async function saveCopiedText(
           if (!isSubscribed) {
             if (useStandardCopy) {
               renderUpgradePopup(
-                `Text has been copied but due to the free tier 500 word limit!<br/>Only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
+                `Text has been copied but due to the free tier 500 word limit<br/>only the first 500 words will be saved!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
                 true
               );
             } else {
@@ -616,9 +599,9 @@ async function saveCopiedText(
                 `Free tier in CopyIn2Clicks is limited to 500 words!<br/>Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
                 true
               );
-              await navigator.clipboard.writeText(
-                cleanExtraNewLines(hasText || selectedText)
-              );
+              // await navigator.clipboard.writeText(
+              //   hasText || selectedText
+              // );
               return;
             }
           } else {
@@ -641,15 +624,15 @@ async function saveCopiedText(
         items.unshift(newItem);
         console.log("newItem", newItem);
 
-        while (
-          items.filter((item) => item.email === lastUserEmail || !item.email)
+        if (
+          items.filter((item) => item.email === userEmail || !item.email)
             .length > maxItems
         ) {
           let unstarredIndex = -1;
           for (let i = items.length - 1; i >= 0; i--) {
             if (
-              items[i].email === lastUserEmail ||
-              (items.email && !items[i].starred)
+              (items[i].email === userEmail || !items[i].email) &&
+              !items[i].starred
             ) {
               unstarredIndex = i;
               break;
@@ -658,25 +641,7 @@ async function saveCopiedText(
           if (unstarredIndex !== -1) {
             items.splice(unstarredIndex, 1);
           } else {
-            // If all items are starred, remove the oldest item
             items.pop();
-          }
-        }
-
-        if (items.filter((item) => item.email === userEmail).length > 15) {
-          console.log("gggggg");
-          const lastIndex = items
-            .map((item) => item.email)
-            .lastIndexOf(userEmail);
-          if (lastIndex !== -1 && !items[lastIndex].starred) {
-            items.splice(lastIndex, 1);
-          } else {
-            for (let i = items.length - 1; i >= 0; i--) {
-              if (items[i].email === userEmail && !items[i].starred) {
-                items.splice(i, 1);
-                break;
-              }
-            }
           }
         }
         let storageCopyArrayName = "recentlyCopiedLogoutItems";
@@ -687,13 +652,11 @@ async function saveCopiedText(
           [storageCopyArrayName]: JSON.stringify(items),
         });
         if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
-          console.log('hello , normal copy ')
+          console.log("hello , normal copy ");
           // Copy the full text to the clipboard
-          await navigator.clipboard.writeText(
-            cleanExtraNewLines(hasText || selectedText)
-          );
-        } else if (isSubscribed && format  ) {
-          console.log('hello formatting')
+          await navigator.clipboard.writeText(hasText || selectedText);
+        } else if (isSubscribed && format) {
+          console.log("hello formatting");
           const selection = window.getSelection();
           const range =
             selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
@@ -702,19 +665,20 @@ async function saveCopiedText(
             div.appendChild(range.cloneContents());
           }
           const html = div.innerHTML;
-          console.log('Rich Text Copied',html)
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-              "text/html": new Blob([html], { type: "text/html" }),
-            }),
-          ]);
+          console.log("Rich Text Copied", html);
+          await navigator.clipboard
+            .write([
+              new ClipboardItem({
+                "text/plain": new Blob([newItem.text], { type: "text/plain" }),
+                "text/html": new Blob([html], { type: "text/html" }),
+              }),
+            ]);
         } else {
-          await navigator.clipboard.writeText(cleanExtraNewLines(newItem.text));
+          await navigator.clipboard.writeText(newItem.text);
         }
         isSelectionCompleted = true;
         if (!isTextTruncated) {
-          setTimeout(() => renderPopup(), 500);
+          setTimeout(() => renderPopup(target), 500);
         }
       }
     );

@@ -66,12 +66,12 @@ function Header({
   };
 
   const handleProfiletoggle = (e) => {
-    e.stopPropagation(); // Prevent event from bubbling up to the document
-    setProfiledropdown(!profiledropdown);
+    e.stopPropagation(); 
+    setProfiledropdown((prevState)=>!prevState);
   };
   const handleSetting =(e)=>{
-    e.stopPropagation(); // Prevent event from bubbling up to the document
-    setDropdownOpen(!dropdownOpen)
+    e.stopPropagation(); 
+    setDropdownOpen((prevState)=>!prevState)
   }
 
   const handleLogout = async () => {
@@ -145,7 +145,7 @@ function Header({
   }, [userData]);
 
 
-  const handleClickOutside = useCallback((event) => {
+  const handleClickOutside = (event) => {
     console.log('outside click')
     if (
       dropdownRef.current &&
@@ -161,12 +161,12 @@ function Header({
       console.log('close profie')
       setProfiledropdown(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [handleClickOutside]);
 
@@ -331,7 +331,7 @@ function Header({
                 <br />
                 <a
                   style={{ color: ":#f59e0b", textDecoration: "underline" }}
-                  href="https://extension-landing-page-zeta.vercel.app/premium"
+                  href="https://www.copyin2clicks.com/premium"
                   target="_blank"
                 >
                   ✨ Click here to expand your clipboard and enhance your
