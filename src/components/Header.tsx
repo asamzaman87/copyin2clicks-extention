@@ -41,7 +41,6 @@ function Header({
   const dropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
 
-
   const openOrFocusTab = (url) => {
     chrome.tabs.query({}, (tabs) => {
       const existingTab = tabs.find((tab) => tab.url === url);
@@ -66,13 +65,13 @@ function Header({
   };
 
   const handleProfiletoggle = (e) => {
-    e.stopPropagation(); 
-    setProfiledropdown((prevState)=>!prevState);
+    e.stopPropagation();
+    setProfiledropdown((prevState) => !prevState);
   };
-  const handleSetting =(e)=>{
-    e.stopPropagation(); 
-    setDropdownOpen((prevState)=>!prevState)
-  }
+  const handleSetting = (e) => {
+    e.stopPropagation();
+    setDropdownOpen((prevState) => !prevState);
+  };
 
   const handleLogout = async () => {
     setLastLoggdInUser(userData.email);
@@ -87,9 +86,9 @@ function Header({
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          body: await fetch(
-            "https://www.copyin2clicks.com/api/auth/csrf"
-          ).then((rs) => rs.text()),
+          body: await fetch("https://www.copyin2clicks.com/api/auth/csrf").then(
+            (rs) => rs.text()
+          ),
         }
       );
       console.log("res", res);
@@ -119,7 +118,6 @@ function Header({
     setShowError(false); // Hide the error message
   };
 
-
   useEffect(() => {
     storage.get("useStandardCopy").then((result) => {
       if (result === undefined) {
@@ -135,7 +133,6 @@ function Header({
         setFormat(initialFormat);
       }
     });
-
   }, []);
 
   useEffect(() => {
@@ -144,21 +141,17 @@ function Header({
     }
   }, [userData]);
 
-
   const handleClickOutside = (event) => {
-    console.log('outside click')
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target)
-    ) {
-      console.log('close drop')
+    console.log("outside click");
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      console.log("close drop");
       setDropdownOpen(false);
     }
     if (
       profileDropdownRef.current &&
       !profileDropdownRef.current.contains(event.target)
     ) {
-      console.log('close profie')
+      console.log("close profie");
       setProfiledropdown(false);
     }
   };
@@ -170,20 +163,21 @@ function Header({
     };
   }, [handleClickOutside]);
 
-
   return (
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
-        <div className="">
-          <div
-            // onClick={redirectToPremium}
-            className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-          ><a href="https://www.copyin2clicks.com/premium" target="_blank">
-
-            {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
+        {/* <div className=""> */}
+          <a href="https://www.copyin2clicks.com/premium" target="_blank">
+            <div
+              // onClick={redirectToPremium}
+              className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
+            >
+              {userData?.stripeSubscriptionId
+                ? "Manage Subscription"
+                : "Upgrade"}
+            </div>
           </a>
-          </div>
-        </div>
+        {/* </div> */}
         <div
           className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
           id="CopyIn2Clicks-title"
@@ -223,7 +217,7 @@ function Header({
             <button
               id="setting-ext-icon"
               className="text-white text-2xl font-bold"
-              onClick ={handleSetting}
+              onClick={handleSetting}
             >
               ⚙️
             </button>
@@ -233,8 +227,9 @@ function Header({
               place="bottom-start"
             />
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 text-black"
-              ref= {dropdownRef}
+              <div
+                className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 text-black"
+                ref={dropdownRef}
               >
                 <div className="p-2">
                   <div className="flex justify-between items-center">
@@ -292,9 +287,9 @@ function Header({
             )}
           </div>
           {profiledropdown && (
-            <div 
-            className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
-            ref={profileDropdownRef}
+            <div
+              className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
+              ref={profileDropdownRef}
             >
               <div className="p-2">
                 <div className="flex justify-end items-end cursor-pointer">

@@ -534,7 +534,6 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
   chrome.storage.local.get(["lastLoggedInUser"], function (result) {
     const lastUserEmail = result.lastLoggedInUser;
     const isSubscribed = userData?.stripeSubscriptionId;
-    // const userEmail = userData?.email || lastUserEmail?.replace(/"/g, "");
     const userEmail = userData?.email || null;
 
     // Function to count words in a string, excluding spaces and newlines
@@ -573,14 +572,8 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
           : result?.recentlyCopiedLogoutItems || "[]";
         items = Array.from(JSON.parse(items));
         const maxItems = userData?.email && isSubscribed ? 15 : 5;
-        // items.filter((item) => item.email === lastUserEmail).length > 5
-        //   ? 15
-        //   : isSubscribed
-        //     ? 15
-        //     : 5;
 
         if (selectedText === "" && !hasText) return;
-
         const maxWords = isSubscribed ? 5000 : 500;
         let textToCopy = hasText || selectedText;
         let isTextTruncated = false;
@@ -599,9 +592,7 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
                 `Free tier in CopyIn2Clicks is limited to 500 words!<br/>Get CopyIn2Clicks Premium now and copy any amount of text effortlessly!<br/><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color:#f59e0b; text-decoration: underline;">✨ Click here to enjoy unlimited copying today! ✨</a>`,
                 true
               );
-              // await navigator.clipboard.writeText(
-              //   hasText || selectedText
-              // );
+
               return;
             }
           } else {
@@ -609,7 +600,6 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
               `Text has been successfully copied to your clipboard, but only the first 5000 words have been saved in the extension!`,
               true
             );
-            // return;
           }
         }
 
@@ -651,34 +641,41 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
         await chrome.storage.local.set({
           [storageCopyArrayName]: JSON.stringify(items),
         });
-        if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
-          console.log("hello , normal copy ");
-          // Copy the full text to the clipboard
-          await navigator.clipboard.writeText(hasText || selectedText);
-        } else if (isSubscribed && format) {
-          console.log("hello formatting");
-          const selection = window.getSelection();
-          const range =
-            selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-          const div = document.createElement("div");
-          if (range) {
-            div.appendChild(range.cloneContents());
+
+        try {
+          if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
+            console.log("hello , normal copy ");
+            // Copy the full text to the clipboard
+            await navigator.clipboard.writeText(hasText || selectedText);
+          } else if (isSubscribed && format) {
+            console.log("hello formatting");
+            const selection = window.getSelection();
+            const range =
+              selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            const div = document.createElement("div");
+            if (range) {
+              div.appendChild(range.cloneContents());
+            }
+            const html = div.innerHTML;
+            console.log("Rich Text Copied", html);
+            // await navigator.clipboard.write([
+            //   new ClipboardItem({
+            //     "text/plain": new Blob([newItem.text], { type: "text/plain" }),
+            //     "text/html": new Blob([html], { type: "text/html" }),
+            //   }),
+            // ]);
+            document.execCommand('copy');
+          } else {
+            await navigator.clipboard.writeText(newItem.text);
           }
-          const html = div.innerHTML;
-          console.log("Rich Text Copied", html);
-          await navigator.clipboard
-            .write([
-              new ClipboardItem({
-                "text/plain": new Blob([newItem.text], { type: "text/plain" }),
-                "text/html": new Blob([html], { type: "text/html" }),
-              }),
-            ]);
-        } else {
-          await navigator.clipboard.writeText(newItem.text);
-        }
-        isSelectionCompleted = true;
-        if (!isTextTruncated) {
-          setTimeout(() => renderPopup(target), 500);
+          isSelectionCompleted = true;
+          if (!isTextTruncated) {
+            setTimeout(() => renderPopup(target), 500);
+          }
+        } catch (err) {
+          renderErrorPopup(
+            "Copying is not supported or blocked by the current document"
+          );
         }
       }
     );
