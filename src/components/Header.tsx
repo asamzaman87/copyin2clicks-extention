@@ -52,16 +52,31 @@ function Header({
     });
   };
 
+  const openPremiumTab = (url) => {
+    chrome.tabs.query({ url }, (tabs) => {
+      if (tabs.length > 0) {
+        // Close all tabs with the matching URL
+        tabs.forEach((tab) => {
+          chrome.tabs.remove(tab.id);
+        });
+      }
+  
+      // Open a new tab with the given URL
+      chrome.tabs.create({ url });
+    });
+  };
+  
+
   const handleRedirect = () => {
     openOrFocusTab("https://www.copyin2clicks.com/");
   };
 
   const redirectToLogin = () => {
-    openOrFocusTab("https://www.copyin2clicks.com/login");
+    openPremiumTab("https://www.copyin2clicks.com/login");
   };
 
   const redirectToPremium = () => {
-    openOrFocusTab("https://www.copyin2clicks.com/premium");
+    openPremiumTab("https://www.copyin2clicks.com/premium");
   };
 
   const handleProfiletoggle = (e) => {
@@ -94,7 +109,7 @@ function Header({
       console.log("res", res);
 
       if (res) {
-        openOrFocusTab("https://www.copyin2clicks.com/login");
+        openPremiumTab("https://www.copyin2clicks.com/login");
       }
     } catch (err) {
       console.log("Failed to logout");
@@ -167,16 +182,16 @@ function Header({
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         {/* <div className=""> */}
-          <a href="https://www.copyin2clicks.com/premium" target="_blank">
+          {/* <a href="https://www.copyin2clicks.com/premium" target="_blank"> */}
             <div
-              // onClick={redirectToPremium}
+              onClick={redirectToPremium}
               className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
             >
               {userData?.stripeSubscriptionId
                 ? "Manage Subscription"
                 : "Upgrade"}
             </div>
-          </a>
+          {/* </a> */}
         {/* </div> */}
         <div
           className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
@@ -228,10 +243,10 @@ function Header({
             />
             {dropdownOpen && (
               <div
-                className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg z-50 text-black"
+                className="absolute right-0 mt-2 w-72  bg-white rounded-md shadow-lg z-50 text-black"
                 ref={dropdownRef}
               >
-                <div className="p-2">
+                <div className="p-2 ">
                   <div className="flex justify-between items-center">
                     <div className="text-sm">Extension</div>
                     <label className="switch text-black text-sm">

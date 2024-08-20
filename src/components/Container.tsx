@@ -282,7 +282,6 @@ function Container({ userData, text, lastLoggedInUser }) {
         return b.id - a.id;
       })
       .slice(0, 5);
-
   }
 
   return (
@@ -323,7 +322,7 @@ function Container({ userData, text, lastLoggedInUser }) {
       </div>
       <div
         ref={listRef}
-        className="p-1 flex flex-col gap-1.5 max-h-[200px] mt-2 mb-2  overflow-auto"
+        className="p-1 flex flex-col gap-1.5 max-h-[200px] mt-2 mb-2  overflow-auto hide-scrollbar"
       >
         {displayItems.map((item) => (
           <Item
@@ -354,7 +353,7 @@ function Container({ userData, text, lastLoggedInUser }) {
 
       {showConfirmationModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-4 rounded shadow-lg">
+          <div className="modal-content">
             <h2 className="text-xl font-bold mb-4">Confirm Action</h2>
             <p className="mb-4">{confirmationMessage}</p>
             <div className="flex justify-end space-x-2">
