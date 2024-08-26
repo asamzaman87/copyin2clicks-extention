@@ -24,6 +24,7 @@ function Container({ userData, text, lastLoggedInUser }) {
     },
     []
   );
+  console.log("")
   const storage = new Storage({ area: "local" });
   const [toolTip, setToolTip] = useStorage(
     { key: "alert", instance: storage },
