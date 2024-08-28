@@ -221,7 +221,7 @@ const renderPopup = (target) => {
       </div>
       <div style="padding: 20px; padding-top: 8px;">
         <div style="padding:4px;color:black;font-weight:bold; text-align:center;" >${popupText}</div>
-          <div style="display:flex;justify-content:center;margin-top:16px" >
+          <div style="display:flex;justify-content:center;margin-top:16px ; align-items:center;" >
             <button id="closeButton" style="border:1px solid #3c82f6;border-radius:6px;padding:4px 40px;background:#3c82f6;color:white;cursor:pointer;font-weight:bold;">OK</button>
           </div>
       </div>

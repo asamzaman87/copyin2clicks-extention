@@ -60,12 +60,11 @@ function Header({
           chrome.tabs.remove(tab.id);
         });
       }
-  
+
       // Open a new tab with the given URL
       chrome.tabs.create({ url });
     });
   };
-  
 
   const handleRedirect = () => {
     openOrFocusTab("https://www.copyin2clicks.com/");
@@ -182,16 +181,14 @@ function Header({
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
         {/* <div className=""> */}
-          {/* <a href="https://www.copyin2clicks.com/premium" target="_blank"> */}
-            <div
-              onClick={redirectToPremium}
-              className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-            >
-              {userData?.stripeSubscriptionId
-                ? "Manage Subscription"
-                : "Upgrade"}
-            </div>
-          {/* </a> */}
+        {/* <a href="https://www.copyin2clicks.com/premium" target="_blank"> */}
+        <div
+          onClick={redirectToPremium}
+          className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
+        >
+          {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
+        </div>
+        {/* </a> */}
         {/* </div> */}
         <div
           className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
@@ -306,10 +303,24 @@ function Header({
               className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
               ref={profileDropdownRef}
             >
-              <div className="p-2">
-                <div className="flex justify-end items-end cursor-pointer">
+              <div className="p-3">
+                <div className="flex justify-end items-end">
                   <div
-                    className="text-sm cursor-pointer"
+                    className="text-base font-semibold"
+                  >
+                    {userData?.name}
+                  </div>
+                </div>
+                <div className="flex justify-end items-end mt-1">
+                  <div
+                    className="text-sm text-gray-600"
+                  >
+                    {userData?.email}
+                  </div>
+                </div>
+                <div className="flex justify-end items-end cursor-pointer mt-1">
+                  <div
+                    className="text-base cursor-pointer"
                     onClick={handleLogout}
                   >
                     Logout
