@@ -303,24 +303,33 @@ function Header({
               className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
               ref={profileDropdownRef}
             >
-              <div className="p-3">
-                <div className="flex justify-end items-end">
+              <div className="py-2">
+                <div className="flex justify-start px-2">
                   <div
-                    className="text-base font-semibold"
+                    className="text-sm font-bold pl-1"
                   >
                     {userData?.name}
                   </div>
                 </div>
-                <div className="flex justify-end items-end mt-1">
+                <div className="flex justify-start px-2">
                   <div
-                    className="text-sm text-gray-600"
+                    className="text-xs text-gray-600 p-1"
                   >
                     {userData?.email}
                   </div>
                 </div>
-                <div className="flex justify-end items-end cursor-pointer mt-1">
+                <hr className="mt-1"/>
+                <div className="flex justify-start cursor-pointer px-2 mt-1 hover:bg-gray-100">
                   <div
-                    className="text-base cursor-pointer"
+                    className="text-sm cursor-pointer p-1"
+                    onClick={redirectToPremium}
+                  >
+                    Subscription
+                  </div>
+                </div>
+                <div className="flex justify-start cursor-pointer px-2 hover:bg-gray-100">
+                  <div
+                    className="text-sm cursor-pointer p-1"
                     onClick={handleLogout}
                   >
                     Logout
