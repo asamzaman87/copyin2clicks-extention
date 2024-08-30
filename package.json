@@ -1,9 +1,9 @@
 {
   "name": "copyin2clicks",
-  "displayName": "CopyIn2Clicks",
-  "version": "1.0.1",
-  "description": "This extension Allow you to copy from all kind of site and auto save it into Clipboard.",
-  "author": "G. Hussain",
+  "displayName": "CopyIn2Clicks: Click, Click & You're Done",
+  "version": "1.0.2",
+  "description": "Elevate your productivity with CopyIn2Clicks. Effortlessly copy and manage text from any website with advanced features.",
+  "author": "Asam Zaman",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -13,7 +13,6 @@
     "firefox-package": "plasmo package --target=firefox-mv2"
   },
   "dependencies": {
-    "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.10.0",
     "plasmo": "0.85.2",
     "react": "18.2.0",
@@ -45,7 +44,7 @@
       "storage",
       "downloads",
       "scripting",
-      "clipboardRead", 
+      "clipboardRead",
       "clipboardWrite",
       "tabs",
       "activeTab"

@@ -12,7 +12,7 @@ function Item({ text, index, starred, toggleStar, userData }) {
       <div
         onMouseOver={() => showActionsFunc(true, "")}
         onMouseLeave={() => showActionsFunc(false, "")}
-        className={`${showActions ? "" : ""} h-10 flex gap-2 items-center  justify-between bg-white p-2 border-2 border-gray-600 rounded-md shadow transition-all duration-100 cursor-default`}
+        className={`${showActions ? "" : ""} flex gap-2 items-center  justify-between bg-white p-1 border-2 border-gray-600 rounded-md shadow transition-all duration-100 cursor-default`}
       >
         <p title={text} className="truncate text-sm">
           {text}

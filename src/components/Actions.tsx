@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { AiOutlineCloseCircle } from "react-icons/ai";
-import { HiOutlineDocumentDownload } from "react-icons/hi";
-import { IoMdOpen } from "react-icons/io";
-import { MdContentCopy } from "react-icons/md";
 import ReactToolTip from "./ReactToolTip";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
-import { FaStar, FaRegStar } from "react-icons/fa";
+import {
+  IconContentCopy,
+  IconFileDownloadOutline,
+  IconOpenInNew,
+  IconCloseCircle,
+  IconStar,
+  IconStarFill,
+} from "~Svg/Svg";
 
 const mimeTypes = {
   // Text-based formats
@@ -64,13 +67,13 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
   async function onCopyToClipboard(text: string) {
     chrome.storage.local.get(["format"], function (result) {
       const isFormattingOn = result.format === true || result.format === "true";
-      console.log('isFormattingOn : ',isFormattingOn)
+      console.log("isFormattingOn : ", isFormattingOn);
       if (userData?.stripeSubscriptionId && isFormattingOn) {
-        console.log('formatted text copied')
+        console.log("formatted text copied");
         setToolTip("Copied");
         document.execCommand("copy");
       } else {
-        console.log('without formatting copied')
+        console.log("without formatting copied");
         setToolTip("Text has been copied!");
         navigator.clipboard.writeText(text);
       }
@@ -257,7 +260,7 @@ startxref
       {showActions && (
         <>
           <div>
-            <MdContentCopy
+            <IconContentCopy
               id="copy-ext-icon"
               onClick={onCopyToClipboard.bind(this, text)}
               className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
@@ -269,7 +272,7 @@ startxref
             />
           </div>
           <div>
-            <HiOutlineDocumentDownload
+            <IconFileDownloadOutline
               onClick={onDownload.bind(this, text)}
               id="download-ext-icon"
               className={`text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline ${!extension && "hover:scale-100 hover:cursor-default text-gray-400"}`}
@@ -281,7 +284,7 @@ startxref
             />
           </div>
           <div>
-            <IoMdOpen
+            <IconOpenInNew
               onClick={onOpenInNewTab.bind(this, text)}
               id="new-tab-ext-icon"
               className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
@@ -293,7 +296,7 @@ startxref
             />
           </div>
           <div>
-            <AiOutlineCloseCircle
+            <IconCloseCircle
               id="remove-ext-icon"
               onClick={handleRemoveClick}
               className="text-2xl cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100 no-focus-outline"
@@ -332,13 +335,13 @@ startxref
 
       <div>
         {starred ? (
-          <FaStar
+          <IconStarFill
             id="starred-icon"
             onClick={() => toggleStar(index)}
             className="text-2xl cursor-pointer text-yellow-500 hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
           />
         ) : (
-          <FaRegStar
+          <IconStar
             id="unstarred-icon"
             onClick={() => toggleStar(index)}
             className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"

@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
-import { AiOutlineDelete } from "react-icons/ai";
-import { FaRegStar } from "react-icons/fa";
 import Item from "./Item";
 import ReactToolTip from "./ReactToolTip";
+import { IconDelete, IconStar } from "~Svg/Svg";
 
 function Container({ userData, text, lastLoggedInUser }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -295,7 +294,7 @@ function Container({ userData, text, lastLoggedInUser }) {
           <div className="flex justify-center items-center gap-1">
             {hasStarredItems && (
               <>
-                <FaRegStar
+                <IconStar
                   id="unstarred"
                   className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
                   onClick={handleUnstarConfirmation}
@@ -308,7 +307,7 @@ function Container({ userData, text, lastLoggedInUser }) {
               </>
             )}
 
-            <AiOutlineDelete
+            <IconDelete
               className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
               onClick={handleClearConfirmation}
               id="delete-all-icon"
