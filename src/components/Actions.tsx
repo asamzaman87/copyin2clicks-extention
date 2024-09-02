@@ -64,20 +64,15 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
     setShowConfirm(true);
   };
 
-  async function onCopyToClipboard(text: string) {
-    chrome.storage.local.get(["format"], function (result) {
-      const isFormattingOn = result.format === true || result.format === "true";
-      console.log("isFormattingOn : ", isFormattingOn);
-      if (userData?.stripeSubscriptionId && isFormattingOn) {
-        console.log("formatted text copied");
-        setToolTip("Copied");
-        document.execCommand("copy");
-      } else {
-        console.log("without formatting copied");
-        setToolTip("Text has been copied!");
-        navigator.clipboard.writeText(text);
-      }
-    });
+  function onCopyToClipboard(text: string) {
+    if (userData?.stripeSubscriptionId) {
+      setToolTip("Copied");
+      navigator.clipboard.writeText(text);
+    } else {
+      setToolTip("Text has been copied!");
+      navigator.clipboard.writeText(text);
+    }
+
     setTimeout(() => {
       setToolTip("");
     }, 1500);
@@ -199,8 +194,6 @@ startxref
   }
 
   function onRemove(idToRemove) {
-    console.log("onRemove12", idToRemove);
-    // return;
     chrome.storage.local.get(
       ["recentlyCopiedItems", "recentlyCopiedLogoutItems"],
       (result) => {
@@ -262,7 +255,8 @@ startxref
           <div>
             <IconContentCopy
               id="copy-ext-icon"
-              onClick={onCopyToClipboard.bind(this, text)}
+              // onClick={onCopyToClipboard.bind(this, text)}
+              onClick={() => onCopyToClipboard(text)}
               className="text-2xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-100 no-focus-outline"
             />
             <ReactToolTip

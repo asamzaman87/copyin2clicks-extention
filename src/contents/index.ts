@@ -27,11 +27,7 @@ const checkStorage = (response) => {
     ["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"],
     async function (result) {
       const items = JSON.parse(result?.recentlyCopiedItems || "[]");
-      console.log("recentlyCopiedItems1212", items);
-      console.log(
-        "recentlyCopiedLogoutItems1212",
-        JSON.parse(result?.recentlyCopiedLogoutItems || "[]")
-      );
+ 
     }
   );
   // chrome.storage.sync.set({ userData: response });
@@ -39,16 +35,12 @@ const checkStorage = (response) => {
 
 const fetchUserData = () => {
   chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
-    console.log("FETCH TUN CONTENT");
     if (response.error) {
       console.error(response.error);
       userData = null;
     } else {
-      console.log("response", response);
       userData = response;
-      // clearStorage();
       chrome.storage.sync.set({ userData: response });
-
       checkStorage(response);
     }
   });
@@ -60,7 +52,6 @@ fetchUserData();
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
-    console.log("changes1212", changes);
     if (
       // changes?.userData?.newValue?.email &&
       changes?.userData?.oldValue?.message === "Unauthorized"
@@ -95,7 +86,6 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
           } else {
             let items = result?.recentlyCopiedLogoutItems || "[]";
             items = Array.from(JSON.parse(items));
-            console.log(result, "CALLEDDD", items, itemsrecentlyCopiedItems);
             if (changes.userData.newValue.loginCount === 1) {
               await chrome.storage.local.set({
                 recentlyCopiedItems: JSON.stringify([
@@ -120,7 +110,6 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
           "recentlyCopiedLogoutItems",
         ],
         async function (result) {
-          console.log("YES LOGG OUT CASE!!", changes?.userData);
 
           let items = result?.recentlyCopiedItems || "[]";
           items = Array.from(JSON.parse(items));
@@ -148,7 +137,6 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
         }
       );
     }
-    console.log("Updated userData:", userData);
   }
 });
 
@@ -612,7 +600,6 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
           isLogout: userData?.message === "Unauthorized" ? true : false,
         };
         items.unshift(newItem);
-        console.log("newItem", newItem);
 
         if (
           items.filter((item) => item.email === userEmail || !item.email)
@@ -644,11 +631,9 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
 
         try {
           if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
-            console.log("hello , normal copy ");
             // Copy the full text to the clipboard
             await navigator.clipboard.writeText(hasText || selectedText);
           } else if (isSubscribed && format) {
-            console.log("hello formatting");
             const selection = window.getSelection();
             const range =
               selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
@@ -657,7 +642,6 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
               div.appendChild(range.cloneContents());
             }
             const html = div.innerHTML;
-            console.log("Rich Text Copied", html);
             // await navigator.clipboard.write([
             //   new ClipboardItem({
             //     "text/plain": new Blob([newItem.text], { type: "text/plain" }),

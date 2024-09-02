@@ -23,7 +23,6 @@ function Container({ userData, text, lastLoggedInUser }) {
     },
     []
   );
-  console.log("")
   const storage = new Storage({ area: "local" });
   const [toolTip, setToolTip] = useStorage(
     { key: "alert", instance: storage },
@@ -31,9 +30,7 @@ function Container({ userData, text, lastLoggedInUser }) {
   );
   const listRef = useRef(null);
 
-  console.log("lastLoggedInUser121212", lastLoggedInUser);
 
-  console.log(recentlyCopiedItems, "recentlyCopiedItems");
 
   useEffect(() => {
     let platform = navigator.platform;
@@ -163,7 +160,6 @@ function Container({ userData, text, lastLoggedInUser }) {
     const isSubscribed = userData?.stripeSubscriptionId;
     const maxItems = userData.email && isSubscribed ? 15 : 5;
 
-    console.log("maxItems", maxItems);
     const minUnstarredItems = 1;
 
     const updatedItems = recentlyCopiedItems.map((item) => {
@@ -175,7 +171,6 @@ function Container({ userData, text, lastLoggedInUser }) {
               item.email === lastLoggedInUser ||
               !item.email)
         ).length;
-        console.log("starredItemsCount", starredItemsCount);
         if (
           !item.starred &&
           starredItemsCount >= maxItems - minUnstarredItems

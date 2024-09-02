@@ -105,8 +105,6 @@ function Header({
           ),
         }
       );
-      console.log("res", res);
-
       if (res) {
         openPremiumTab("https://www.copyin2clicks.com/login");
       }
@@ -156,16 +154,13 @@ function Header({
   }, [userData]);
 
   const handleClickOutside = (event) => {
-    console.log("outside click");
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      console.log("close drop");
       setDropdownOpen(false);
     }
     if (
       profileDropdownRef.current &&
       !profileDropdownRef.current.contains(event.target)
     ) {
-      console.log("close profie");
       setProfiledropdown(false);
     }
   };
@@ -180,16 +175,12 @@ function Header({
   return (
     <>
       <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
-        {/* <div className=""> */}
-        {/* <a href="https://www.copyin2clicks.com/premium" target="_blank"> */}
         <div
           onClick={redirectToPremium}
           className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
         >
           {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
         </div>
-        {/* </a> */}
-        {/* </div> */}
         <div
           className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
           id="CopyIn2Clicks-title"
@@ -305,35 +296,25 @@ function Header({
             >
               <div className="py-2">
                 <div className="flex justify-start px-2">
-                  <div
-                    className="text-sm font-bold pl-1"
-                  >
-                    {userData?.name}
-                  </div>
+                  <div className="text-sm font-bold pl-1">{userData?.name}</div>
                 </div>
                 <div className="flex justify-start px-2">
-                  <div
-                    className="text-xs text-gray-600 p-1"
-                  >
+                  <div className="text-xs text-gray-600 p-1">
                     {userData?.email}
                   </div>
                 </div>
-                <hr className="mt-1"/>
-                <div className="flex justify-start cursor-pointer px-2 mt-1 hover:bg-gray-100">
-                  <div
-                    className="text-sm cursor-pointer p-1"
-                    onClick={redirectToPremium}
-                  >
-                    Subscription
-                  </div>
+                <hr className="mt-1" />
+                <div
+                  className="flex justify-start cursor-pointer px-2 mt-1 hover:bg-gray-100"
+                  onClick={redirectToPremium}
+                >
+                  <div className="text-sm cursor-pointer p-1">Subscription</div>
                 </div>
-                <div className="flex justify-start cursor-pointer px-2 hover:bg-gray-100">
-                  <div
-                    className="text-sm cursor-pointer p-1"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </div>
+                <div
+                  className="flex justify-start cursor-pointer px-2 hover:bg-gray-100"
+                  onClick={handleLogout}
+                >
+                  <div className="text-sm cursor-pointer p-1">Logout</div>
                 </div>
               </div>
             </div>

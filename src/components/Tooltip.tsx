@@ -2,7 +2,6 @@ import React from "react";
 import { NOEXTENTION, INVALID_EXTENSION } from "src/utils/constants";
 
 function Tooltip({ text }) {
-  console.log(text);
   let alertType = "success";
   if (
     text === NOEXTENTION ||

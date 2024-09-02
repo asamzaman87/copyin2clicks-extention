@@ -55,7 +55,6 @@ function IndexPopup() {
         throw new Error("No userData found");
       }
     } catch (storageError) {
-      console.log("Storage error:", storageError);
       chrome.runtime.sendMessage({ action: "fetchUserData" }, (response) => {
         if (chrome.runtime.lastError) {
           setError(chrome.runtime.lastError.message);
