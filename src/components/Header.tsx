@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 import ReactToolTip from "./ReactToolTip";
@@ -24,6 +24,10 @@ function Header({
   const [format, setFormat] = useStorage(
     { key: "format", instance: new Storage({ area: "local" }) },
     initialFormat
+  );
+  const [isPopupon, setIsPopupon] = useStorage(
+    { key: "isPopupon", instance: new Storage({ area: "local" }) },
+    true
   );
   const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
     key: "lastLoggedInUser",
@@ -90,7 +94,6 @@ function Header({
   const handleLogout = async () => {
     setLastLoggdInUser(userData.email);
     setLastLoggedInUser(userData.email);
-
     try {
       const res = await fetch(
         "https://www.copyin2clicks.com/api/auth/signout?callbackUrl=/api/auth/session",
@@ -126,9 +129,21 @@ function Header({
     }
   };
 
-  const handleDismissError = () => {
+  const handlePopupChange = () => {
+    if (userData && userData.stripeSubscriptionId) {
+      setIsPopupon((prev) => !prev);
+      setError("");
+    } else {
+      setError("Please upgrade to premium to use this feature.");
+      setShowError(true);
+    }
+  };
+
+  const handleDismissError = (e:any) => {
+    e.stopPropagation();
     setShowError(false); // Hide the error message
   };
+  
 
   useEffect(() => {
     storage.get("useStandardCopy").then((result) => {
@@ -145,11 +160,19 @@ function Header({
         setFormat(initialFormat);
       }
     });
+    storage.get("isPopupon").then((result) => {
+      if (result !== undefined) {
+        setIsPopupon(result);
+      } else {
+        setIsPopupon(true);
+      }
+    });
   }, []);
 
   useEffect(() => {
     if (!userData?.stripeSubscriptionId) {
       setFormat(false);
+      setIsPopupon(true)
     }
   }, [userData]);
 
@@ -216,7 +239,7 @@ function Header({
             )}
           </div>
 
-          <div>
+          <div className="relative">
             <button
               id="setting-ext-icon"
               className="text-white text-2xl font-bold"
@@ -231,7 +254,7 @@ function Header({
             />
             {dropdownOpen && (
               <div
-                className="absolute right-0 mt-2 w-72  bg-white rounded-md shadow-lg z-50 text-black"
+                className="absolute right-0 mt-2 w-72  bg-white rounded-md shadow-lg text-black"
                 ref={dropdownRef}
               >
                 <div className="p-2 ">
@@ -271,6 +294,18 @@ function Header({
                       <div className="slider round"></div>
                     </label>
                   </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="text-sm">Copy Notification</div>
+                    <label className="switch text-black">
+                      <input
+                        onChange={handlePopupChange}
+                        checked={isPopupon}
+                        type="checkbox"
+                        id="popupon"
+                      />
+                      <div className="slider round"></div>
+                    </label>
+                  </div>
 
                   <div className="flex justify-between items-center mt-2">
                     <div className="text-sm">Keyboard Copy Key</div>
@@ -291,7 +326,7 @@ function Header({
           </div>
           {profiledropdown && (
             <div
-              className="absolute right-10 top-12 bg-white rounded-md shadow-lg z-2 text-black"
+              className="absolute right-10 top-12 bg-white rounded-md shadow-lg text-black"
               ref={profileDropdownRef}
             >
               <div className="py-2">
@@ -323,7 +358,7 @@ function Header({
       </div>
       {showError && (
         <div className="relative">
-          <div className="absolute z-50 top-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="absolute top-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white text-yellow-600 p-4 rounded shadow-lg text-center m-8">
               <div className="flex justify-center">
                 <svg

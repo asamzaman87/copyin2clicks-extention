@@ -101,7 +101,7 @@ function Footer({ userData }) {
   }
 
   return (
-    <div className="p-2 pb-0 flex justify-center">
+    <div className="flex justify-center mb-2">
       {/* <div className="flex justify-start items-center gap-2">
         <FaUserPlus className="text-blue-400" size={25} />
         <span className="text-sm font-semibold">

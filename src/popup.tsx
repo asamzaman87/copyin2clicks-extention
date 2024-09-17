@@ -35,6 +35,7 @@ function IndexPopup() {
     return new Promise((resolve, reject) => {
       chrome.storage.sync.get("userData", (result) => {
         if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
           reject(chrome.runtime.lastError);
         } else {
           resolve(result.userData);
@@ -67,11 +68,11 @@ function IndexPopup() {
           setUserData(response);
           setLastLoggdInUser(response?.email);
           chrome.storage.sync.set({ userData: response });
+          console.log("res", response);
         }
       });
     }
   };
-
 
   useEffect(() => {
     setAlert("");
@@ -82,9 +83,10 @@ function IndexPopup() {
         setUserData(changes.userData.newValue);
       }
     };
-
+    chrome.storage.sync.get("userData", (result) => {
+      setUserData(result.userData || {});
+    });
     chrome.storage.onChanged.addListener(handleStorageChange);
-
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
@@ -102,25 +104,23 @@ function IndexPopup() {
     }
   }, [selectedKeyCombination]);
 
-  
-
   return (
     <>
-      <div className="w-[450px] min-h-[100px] max-h-[450px]">
+      <div className="w-[450px] min-h-[300px] max-h-[450px] flex flex-col justify-between">
         <Header
           setLastLoggdInUser={setLastLoggdInUser}
           userData={userData}
           selectedKeyCombination={selectedKeyCombination}
           handleKeyCombinationChange={handleKeyCombinationChange}
         />
-        <main className="p-2">
+        <main className="p-2 flex-grow">
           <Container
             lastLoggedInUser={lastLoggedInUser}
             userData={userData}
             text={text}
           />
-          <Footer userData={userData} />
         </main>
+        <Footer userData={userData} />
         {alert && <Tooltip text={alert} />}
       </div>
     </>

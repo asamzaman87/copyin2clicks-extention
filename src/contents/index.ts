@@ -21,13 +21,14 @@ const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
 let userData: UserData | null = null;
+let popupTimeoutId; // Global timeout reference
+let popupElement; // Global reference to popup element
 
 const checkStorage = (response) => {
   chrome.storage.local.get(
     ["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"],
     async function (result) {
       const items = JSON.parse(result?.recentlyCopiedItems || "[]");
- 
     }
   );
   // chrome.storage.sync.set({ userData: response });
@@ -50,12 +51,10 @@ fetchUserData();
 
 // Listen for changes in chrome storage
 chrome.storage.onChanged.addListener((changes, areaName) => {
+  console.log(changes, 'changes')
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
-    if (
-      // changes?.userData?.newValue?.email &&
-      changes?.userData?.oldValue?.message === "Unauthorized"
-    ) {
+    if (changes?.userData?.oldValue?.message === "Unauthorized") {
       //Set Toggle To true
       if (changes?.userData?.newValue?.stripeSubscriptionId) {
         chrome.storage.local.set({ format: true }, () => {
@@ -110,7 +109,6 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
           "recentlyCopiedLogoutItems",
         ],
         async function (result) {
-
           let items = result?.recentlyCopiedItems || "[]";
           items = Array.from(JSON.parse(items));
 
@@ -141,89 +139,105 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 const renderPopup = (target) => {
-  const isSubscribed = userData?.stripeSubscriptionId;
+  chrome.storage.local.get(["isPopupon"], function (result) {
+    const isPopupon = result.isPopupon === true || result.isPopupon === "true";
+    window.getSelection().removeAllRanges();
+    resetAll();
+    if (!isPopupon) {
+      return;
+    }
+    // If a popup is already showing, do nothing (no new popup, no reset of the timer)
+    if (popupElement) {
+      return;
+    }
 
-  // Create overlay
-  const overlay = document.createElement("div");
-  overlay.className = "copy-in-click-ext-popup"; // Add class
+    const isSubscribed = userData?.stripeSubscriptionId;
 
-  overlay.style.cssText = `
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "copy-in-click-ext-popup-overlay";
+
+    overlay.style.cssText = `
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999998; /* Place it below the popup */
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 999998;
+    background-color: rgba(0, 0, 0, 0.5);
   `;
-  document.body.appendChild(overlay);
+    document.body.appendChild(overlay);
 
-  function closePopup() {
-    // Remove overlay and popup
-    overlay.remove();
-    popup.style.opacity = "0";
-    setTimeout(() => {
-      popup.remove();
-      window.getSelection().removeAllRanges();
-      resetAll();
-      // Clear brackets in input/textarea after clicking "OK"
-      if (target) {
-        const inputValue = target.value;
-        target.value = inputValue.replace(/\[|\]/g, "");
-        target = null;
-      }
-    }, 100);
-  }
+    function closePopup() {
+      overlay.remove();
+      popupElement.style.opacity = "0";
+      setTimeout(() => {
+        popupElement.remove();
+        window.getSelection().removeAllRanges();
+        resetAll();
+        popupElement = null;
+        clearTimeout(popupTimeoutId); // Clear the timeout to avoid unintended behavior
+      }, 100);
+    }
 
-  const popup = document.createElement("div");
-  popup.className = "copy-in-click-ext-popup";
+    // Create popup
 
-  popup.style.cssText = `
+    popupElement = document.createElement("div");
+    popupElement.className = "copy-in-click-ext-popup";
+
+    popupElement.style.cssText = `
     position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 10px;
+    right: 10px;
     background-color: #ffffff;
     z-index: 999999;
     border-radius: 8px;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     opacity: 0;
-    transition: opacity 0.2s ease; 
+    transition: opacity 0.2s ease;
   `;
 
-  const popupText = isSubscribed
-    ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!"
-    : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://www.copyin2clicks.com/premium" target = "_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
+    const popupText = isSubscribed
+      ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!"
+      : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
 
-  // Add content to the popup
-  popup.innerHTML = `
-    <div>
-      <div style="display:flex;justify-content:center;padding:8px;padding-bottom:0;" >
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="48" height="48" viewBox="0 0 256 256" xml:space="preserve">
-          <defs></defs>
-          <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
-            <polygon points="37.95,64.44 23.78,50.27 30.85,43.2 37.95,50.3 59.15,29.1 66.22,36.17 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,158,4); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
-            <path d="M 45 90 C 20 90 0 70 0 45 C 0 20 20 0 45 0 c 25 0 45 20 45 45 C 90 70 70 90 45 90 z M 45 10 c -19 0 -35 16 -35 35 s 16 35 35 35 s 35 -16 35 -35 S 64 10 45 10 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,158,4); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+    popupElement.innerHTML = `
+    <div style="width:350px">
+      <div style="display:flex; justify-content:center; padding-top:3px; padding-bottom:0;">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="40" height="40" viewBox="0 0 256 256">
+          <g style="fill: rgb(0,158,4); opacity: 1;" transform="translate(1.4 1.4) scale(2.81 2.81)">
+            <polygon points="37.95,64.44 23.78,50.27 30.85,43.2 37.95,50.3 59.15,29.1 66.22,36.17 "/>
+            <path d="M 45 90 C 20 90 0 70 0 45 C 0 20 20 0 45 0 c 25 0 45 20 45 45 C 90 70 70 90 45 90 z M 45 10 c -19 0 -35 16 -35 35 s 16 35 35 35 s 35 -16 35 -35 S 64 10 45 10 z" />
           </g>
         </svg>
       </div>
-      <div style="padding: 20px; padding-top: 8px;">
-        <div style="padding:4px;color:black;font-weight:bold; text-align:center;" >${popupText}</div>
-          <div style="display:flex;justify-content:center;margin-top:16px ; align-items:center;" >
-            <button id="closeButton" style="border:1px solid #3c82f6;border-radius:6px;padding:4px 40px;background:#3c82f6;color:white;cursor:pointer;font-weight:bold;">OK</button>
-          </div>
+      <div style="padding: 10px; padding-top: 8px;">
+        <div style="font-size:13px; color:black; font-weight:bold; text-align:center;">${popupText}</div>
+        <div style="display:flex;justify-content:center;margin-top:12px;align-items:center;">
+          <button id="closeButton" style="border:1px solid #3c82f6; border-radius:6px; padding:4px 20px; background:#3c82f6; color:white; cursor:pointer; font-weight:bold; font-size : 13px">OK</button>
+        </div>
       </div>
     </div>
   `;
 
-  document.body.appendChild(popup);
-  popup.offsetHeight;
-  popup.style.opacity = "1";
-  const closeButton = popup.querySelector("#closeButton");
-  closeButton.addEventListener("click", closePopup);
-  overlay.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+    document.body.appendChild(popupElement);
+    popupElement.offsetHeight;
+    popupElement.style.opacity = "1";
+
+    // Set timeout for 5 seconds to close the popup
+    popupTimeoutId = setTimeout(() => {
+      closePopup();
+    }, 5000);
+
+    // OK button click event to manually close the popup
+    const closeButton = popupElement.querySelector("#closeButton");
+    closeButton.addEventListener("click", () => {
+      clearTimeout(popupTimeoutId); // Clear the timeout
+      closePopup();
+    });
+
+    // Prevent clicking on overlay from closing the popup
+    overlay.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
   });
 };
 
@@ -450,7 +464,18 @@ document.addEventListener("click", function (event) {
                 (
                   target as HTMLInputElement | HTMLTextAreaElement
                 ).setSelectionRange(openingBracketIndex + 1, cursorPosition);
+
                 saveCopiedText(selectedText, target, format, false);
+                setTimeout(() => {
+                  if (target) {
+                    const inputValue = (target as HTMLInputElement).value;
+                    (target as HTMLInputElement).value = inputValue.replace(
+                      /\[|\]/g,
+                      ""
+                    );
+                    // (target as HTMLInputElement) = null;
+                  }
+                }, 400);
               } else {
                 const errorMessage =
                   "CopyIn2Clicks Error: Closing Bracket Must be Placed After the Opening Bracket";
@@ -648,7 +673,7 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
             //     "text/html": new Blob([html], { type: "text/html" }),
             //   }),
             // ]);
-            document.execCommand('copy');
+            document.execCommand("copy");
           } else {
             await navigator.clipboard.writeText(newItem.text);
           }

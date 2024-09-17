@@ -69,7 +69,7 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
       setToolTip("Copied");
       navigator.clipboard.writeText(text);
     } else {
-      setToolTip("Text has been copied!");
+      setToolTip("Text has been copied! Enjoying the Extension? Consider Upgrading!");
       navigator.clipboard.writeText(text);
     }
 
