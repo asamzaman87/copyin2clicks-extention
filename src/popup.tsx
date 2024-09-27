@@ -20,7 +20,6 @@ function IndexPopup() {
   const [alert, setAlert] = useStorage({ key: "alert", instance: storage }, "");
   const [userData, setUserData] = useState<userData | []>([]);
   const [text, setText] = useState("Alt/Option");
-
   const [lastLoggedInUser, setLastLoggdInUser] = useStorage({
     key: "lastLoggedInUser",
     instance: new Storage({ area: "local" }),
@@ -31,17 +30,21 @@ function IndexPopup() {
     "altKey"
   );
 
-  const getUserDataFromStorage = (): Promise<userData | null> => {
-    return new Promise((resolve, reject) => {
-      chrome.storage.sync.get("userData", (result) => {
-        if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError.message);
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(result.userData);
-        }
-      });
-    });
+  const getUserDataFromStorage = async () => {
+    chrome.runtime.sendMessage({ action: "fetchUserData" }, (result) => {
+      return result;
+    })
+    //Call API
+    // return new Promise((resolve, reject) => {
+    //   chrome.storage.sync.get("userData", (result) => {
+    //     if (chrome.runtime.lastError) {
+    //       console.error(chrome.runtime.lastError.message);
+    //       reject(chrome.runtime.lastError);
+    //     } else {
+    //       resolve(result.userData);
+    //     }
+    //   });
+    // });
   };
 
   const fetchUserData = async () => {
