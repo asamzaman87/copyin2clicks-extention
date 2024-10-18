@@ -80,7 +80,7 @@ function Actions({ text, index, starred, toggleStar, showActions, userData }) {
 
   const onDownload = (text) => {
     if (!userData?.stripeSubscriptionId) {
-      setToolTip("Upgrade Premium To Download!");
+      setToolTip("Upgrade to Premium to Download!");
       setTimeout(() => {
         setToolTip("");
       }, 500);

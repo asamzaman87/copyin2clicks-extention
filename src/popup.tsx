@@ -30,21 +30,17 @@ function IndexPopup() {
     "altKey"
   );
 
-  const getUserDataFromStorage = async () => {
-    chrome.runtime.sendMessage({ action: "fetchUserData" }, (result) => {
-      return result;
-    })
-    //Call API
-    // return new Promise((resolve, reject) => {
-    //   chrome.storage.sync.get("userData", (result) => {
-    //     if (chrome.runtime.lastError) {
-    //       console.error(chrome.runtime.lastError.message);
-    //       reject(chrome.runtime.lastError);
-    //     } else {
-    //       resolve(result.userData);
-    //     }
-    //   });
-    // });
+  const getUserDataFromStorage = async (): Promise<userData | null> => {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "fetchUserData" }, (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          reject(chrome.runtime.lastError);
+        } else {
+          resolve(result || null);
+        }
+      });
+    });
   };
 
   const fetchUserData = async () => {
@@ -71,7 +67,6 @@ function IndexPopup() {
           setUserData(response);
           setLastLoggdInUser(response?.email);
           chrome.storage.sync.set({ userData: response });
-          console.log("res", response);
         }
       });
     }

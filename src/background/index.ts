@@ -1,5 +1,12 @@
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({ isOn: true });
+  chrome.storage.local.set({ isOn: true , isPopupon: true});
+  chrome.tabs.query({}, (tabs) => {
+    for (const tab of tabs) {
+      if (!tab.url.match(/^(chrome|chrome-extension):\/\//gi)) {
+        chrome.tabs.reload(tab.id);
+      }
+    }
+  });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

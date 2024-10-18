@@ -9,7 +9,7 @@ function Tooltip({ text }) {
     text === "Please Set File Extension!" ||
     text === "At Least One Item Must Remain Unstarred!" ||
     text === "No Unstarred Items To Delete!" ||
-    text === "Upgrade Premium To Download!" ||
+    text === "Upgrade to Premium to Download!" ||
     text === "This item cannot be starred/unstarred!" ||
     text === "Cannot remove item!"
   ) {

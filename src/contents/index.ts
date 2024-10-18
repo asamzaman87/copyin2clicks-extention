@@ -35,23 +35,34 @@ const checkStorage = (response) => {
 };
 
 const fetchUserData = () => {
-  chrome.runtime.sendMessage({ action: "fetchUserData" }, function (response) {
-    if (response.error) {
-      console.error(response.error);
-      userData = null;
-    } else {
-      userData = response;
-      chrome.storage.sync.set({ userData: response });
-      checkStorage(response);
-    }
-  });
+  try {
+    chrome.runtime.sendMessage(
+      { action: "fetchUserData" },
+      function (response) {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "Error with the extension context: ",
+            chrome.runtime.lastError
+          );
+        } else if (response.error) {
+          console.error(response.error);
+          userData = null;
+        } else {
+          userData = response;
+          chrome.storage.sync.set({ userData: response });
+          checkStorage(response);
+        }
+      }
+    );
+  } catch (error) {
+    console.error("Failed to send message to background script: ", error);
+  }
 };
 
 fetchUserData();
 
 // Listen for changes in chrome storage
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  console.log(changes, 'changes')
   if (areaName === "sync" && changes.userData) {
     userData = changes.userData.newValue;
     if (changes?.userData?.oldValue?.message === "Unauthorized") {
@@ -143,9 +154,11 @@ const renderPopup = (target) => {
     const isPopupon = result.isPopupon === true || result.isPopupon === "true";
     window.getSelection().removeAllRanges();
     resetAll();
+
     if (!isPopupon) {
       return;
     }
+
     // If a popup is already showing, do nothing (no new popup, no reset of the timer)
     if (popupElement) {
       return;
@@ -156,13 +169,12 @@ const renderPopup = (target) => {
     // Create overlay
     const overlay = document.createElement("div");
     overlay.className = "copy-in-click-ext-popup-overlay";
-
     overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    z-index: 999998;
-    background-color: rgba(0, 0, 0, 0.5);
-  `;
+      position: fixed;
+      top: 0;
+      z-index: 999998;
+      background-color: rgba(0, 0, 0, 0.5);
+    `;
     document.body.appendChild(overlay);
 
     function closePopup() {
@@ -177,29 +189,39 @@ const renderPopup = (target) => {
       }, 100);
     }
 
-    // Create popup
+    // Create a container element for the shadow DOM
+    const shadowContainer = document.createElement("div");
+    shadowContainer.style.position = "fixed";
+    shadowContainer.style.top = "10px";
+    shadowContainer.style.right = "10px";
+    shadowContainer.style.zIndex= "99999";
+    shadowContainer.innerText = "!"
+    // Attach a shadow root to the container
+    const shadow = shadowContainer.attachShadow({ mode: "open" });
 
+    // Create popup in the shadow DOM
     popupElement = document.createElement("div");
     popupElement.className = "copy-in-click-ext-popup";
-
     popupElement.style.cssText = `
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background-color: #ffffff;
-    z-index: 999999;
-    border-radius: 8px;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  `;
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 999999;
+      background-color: #ffffff;
+      border-radius: 8px !important;
+      box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      display: block !important; 
+      visibility: visible !important; 
+    `;
 
     const popupText = isSubscribed
       ? "Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!"
       : `Text has been copied to clipboard.<br> Click on the CopyIn2Clicks extension icon to view!<br>Want to keep the original formatting?<br><a href="https://www.copyin2clicks.com/premium" target="_blank" style="color: blue; text-decoration: underline;">Click here to learn how to upgrade and enjoy enhanced copying features!</a>`;
 
     popupElement.innerHTML = `
-    <div style="width:350px">
+    <div style="width:350px; font-family: Arial, sans-serif;">
       <div style="display:flex; justify-content:center; padding-top:3px; padding-bottom:0;">
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="40" height="40" viewBox="0 0 256 256">
           <g style="fill: rgb(0,158,4); opacity: 1;" transform="translate(1.4 1.4) scale(2.81 2.81)">
@@ -209,7 +231,7 @@ const renderPopup = (target) => {
         </svg>
       </div>
       <div style="padding: 10px; padding-top: 8px;">
-        <div style="font-size:13px; color:black; font-weight:bold; text-align:center;">${popupText}</div>
+        <div style="font-size:13px; color:black; font-weight:bold; text-align:center; letter-spacing: normal; line-height: 1.6;">${popupText}</div>
         <div style="display:flex;justify-content:center;margin-top:12px;align-items:center;">
           <button id="closeButton" style="border:1px solid #3c82f6; border-radius:6px; padding:4px 20px; background:#3c82f6; color:white; cursor:pointer; font-weight:bold; font-size : 13px">OK</button>
         </div>
@@ -217,7 +239,13 @@ const renderPopup = (target) => {
     </div>
   `;
 
-    document.body.appendChild(popupElement);
+    // Append the popup element to the shadow root
+    shadow.appendChild(popupElement);
+
+    // Append the shadow container to the body
+    document.body.appendChild(shadowContainer);
+
+    // Trigger opacity transition
     popupElement.offsetHeight;
     popupElement.style.opacity = "1";
 
@@ -576,6 +604,7 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy) {
     function cleanExtraNewLines(text) {
       return text.replace(/(\r\n|\n|\r){2,}/g, "\n").trim();
     }
+    
 
     chrome.storage.local.get(
       ["recentlyCopiedItems", "recentlyCopiedLogoutItems"],
@@ -740,6 +769,14 @@ function insertBrackets(textContent, x, y) {
 
   const startBracket = document.createElement("span");
   startBracket.textContent = textContent;
+  startBracket.style.cssText = `
+  display: inline-block;
+  font-size: inherit; 
+  font-family: inherit; 
+  background: transparent;
+  color : inherit;
+  height: 100%;
+`;
   if (textContent === "[") {
     startBracket.classList.add(bracketStartElementClass);
   } else {
