@@ -5,7 +5,7 @@ import Item from "./Item";
 import ReactToolTip from "./ReactToolTip";
 import { IconDelete, IconStar } from "~Svg/Svg";
 
-function Container({ userData, text, lastLoggedInUser })
+function Container({ text })
 {
     const [showTooltip, setShowTooltip] = useState(false);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -16,7 +16,7 @@ function Container({ userData, text, lastLoggedInUser })
     const [key, setKey] = useState("");
     const [recentlyCopiedItems, setRecentlyCopiedItems] = useStorage(
         {
-            key: userData.email ? "recentlyCopiedItems" : "recentlyCopiedLogoutItems",
+            key: "recentlyCopiedLogoutItems",
             // key: "recentlyCopiedItems",
             instance: new Storage({
                 area: "local",
@@ -38,34 +38,6 @@ function Container({ userData, text, lastLoggedInUser })
         let platform = navigator.platform;
         setKey(platform.includes("Mac") ? "Option" : "AltKey");
     }, []);
-
-    //   useEffect(() => {
-    //     const handleScroll = () => {
-    //       if (
-    //         listRef.current &&
-    //         listRef.current.scrollHeight - listRef.current.scrollTop ===
-    //           listRef.current.clientHeight
-    //       ) {
-    //         if (
-    //           recentlyCopiedItems.length >= 5 &&
-    //           !userData?.stripeSubscriptionId
-    //         ) {
-    //           setShowUpgradePopup(true);
-    //         }
-    //       }
-    //     };
-
-    //     const listElement = listRef.current;
-    //     if (listElement) {
-    //       listElement.addEventListener("scroll", handleScroll);
-    //     }
-
-    //     return () => {
-    //       if (listElement) {
-    //         listElement.removeEventListener("scroll", handleScroll);
-    //       }
-    //     };
-    //   }, [recentlyCopiedItems, userData]);
 
     function handleClearConfirmation()
     {
@@ -102,29 +74,8 @@ function Container({ userData, text, lastLoggedInUser })
     {
         // Calculate the displayItems before any operations
         let displayItems = [];
-        if (userData.email)
-        {
-            displayItems = recentlyCopiedItems.filter(
-                (item) => item.email === userData.email
-            );
-            displayItems = displayItems;
-
-        } else
-        {
-            displayItems = recentlyCopiedItems
-                .filter((item) => item.email === lastLoggedInUser || item.isLogout)
-                .sort((a, b) =>
-                {
-                    if (b.starred && !a.starred) return 1;
-                    if (!b.starred && a.starred) return -1;
-                    if (a.starred && b.starred)
-                        return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-                    if (!a.starred && !b.starred)
-                        return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-                    return b.id - a.id;
-                })
-                .slice(0, 5);
-        }
+        displayItems = recentlyCopiedItems;
+        displayItems = displayItems;
 
         // Filter unstarred items that are in displayItems
         const unstarredItems = displayItems.filter((item) => !item.starred);
@@ -144,8 +95,7 @@ function Container({ userData, text, lastLoggedInUser })
         // Filter remaining items, excluding unstarred items that are in displayItems
         const remainingItems = recentlyCopiedItems.filter(
             (item) =>
-                item.starred ||
-                !displayItems.some((displayItem) => displayItem.email === item.email)
+                item.starred
         );
 
         setRecentlyCopiedItems(remainingItems);
@@ -160,7 +110,7 @@ function Container({ userData, text, lastLoggedInUser })
 
     function toggleStar(id)
     {
-        const maxItems = userData.email && 15;
+        const maxItems = 15;
 
         const minUnstarredItems = 1;
 
@@ -168,13 +118,7 @@ function Container({ userData, text, lastLoggedInUser })
         {
             if (item.id === id)
             {
-                const starredItemsCount = recentlyCopiedItems.filter(
-                    (item) =>
-                        item.starred &&
-                        (item.email === userData.email ||
-                            item.email === lastLoggedInUser ||
-                            !item.email)
-                ).length;
+                const starredItemsCount = recentlyCopiedItems.filter((item) => item.starred).length;
                 if (
                     !item.starred &&
                     starredItemsCount >= maxItems - minUnstarredItems
@@ -219,19 +163,11 @@ function Container({ userData, text, lastLoggedInUser })
     {
         const updatedItems = recentlyCopiedItems.map((item) =>
         {
-            if (
-                item?.email === userData?.email ||
-                item?.email === lastLoggedInUser ||
-                !item?.email
-            )
-            {
-                return {
-                    ...item,
-                    starred: false,
-                    lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
-                };
-            }
-            return item;
+            return {
+                ...item,
+                starred: false,
+                lastModifiedTimestamp: new Date().getTime(), // Update lastModifiedTimestamp
+            };
         });
 
         setRecentlyCopiedItems(updatedItems);
@@ -247,41 +183,17 @@ function Container({ userData, text, lastLoggedInUser })
     const hasStarredItems = recentlyCopiedItems.some((item) => item.starred);
 
     let displayItems = [];
-    if (userData.email)
+    displayItems = recentlyCopiedItems;
+    displayItems = displayItems.sort((a, b) =>
     {
-        if (userData.loginCount === 1)
-        {
-            displayItems = recentlyCopiedItems.filter((item) => item.isLogout);
-        }
-        displayItems = recentlyCopiedItems.filter(
-            (item) => item.email === userData.email
-        );
-        displayItems = displayItems.sort((a, b) =>
-        {
-            if (b.starred && !a.starred) return 1;
-            if (!b.starred && a.starred) return -1;
-            if (a.starred && b.starred)
-                return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-            if (!a.starred && !b.starred)
-                return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-            return b.id - a.id;
-        });
-    } else
-    {
-        displayItems = recentlyCopiedItems
-            .filter((item) => item.email === lastLoggedInUser || !item.email)
-            .sort((a, b) =>
-            {
-                if (b.starred && !a.starred) return 1;
-                if (!b.starred && a.starred) return -1;
-                if (a.starred && b.starred)
-                    return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-                if (!a.starred && !b.starred)
-                    return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
-                return b.id - a.id;
-            })
-            .slice(0, 5);
-    }
+        if (b.starred && !a.starred) return 1;
+        if (!b.starred && a.starred) return -1;
+        if (a.starred && b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+        if (!a.starred && !b.starred)
+            return b.lastModifiedTimestamp - a.lastModifiedTimestamp;
+        return b.id - a.id;
+    });
 
     return (
         <div className="flex flex-col">
@@ -330,7 +242,6 @@ function Container({ userData, text, lastLoggedInUser })
                         key={item.id}
                         starred={item.starred}
                         toggleStar={toggleStar}
-                        userData={userData}
                     />
                 ))}
                 {displayItems.length === 0 && (

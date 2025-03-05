@@ -5,13 +5,6 @@ export const config: PlasmoCSConfig = {
     all_frames: true,
 };
 
-interface UserData
-{
-    stripeSubscriptionId?: string;
-    email?: string;
-    message: string;
-    loginCount?: string | number;
-}
 
 let startNode = null;
 let endNode = null;
@@ -21,157 +14,8 @@ const bracketStartElementClass = "copy-in-click-ext-bracket-start";
 const bracketEndElementClass = "copy-in-click-ext-bracket-end";
 let blinkingInterval;
 let targetElement = null;
-let userData: UserData | null = null;
 let popupTimeoutId; // Global timeout reference
 let popupElement; // Global reference to popup element
-
-const checkStorage = (response) =>
-{
-    chrome.storage.local.get(
-        ["lastLoggedInUser", "recentlyCopiedItems", "recentlyCopiedLogoutItems"],
-        async function (result)
-        {
-            const items = JSON.parse(result?.recentlyCopiedItems || "[]");
-        }
-    );
-    // chrome.storage.sync.set({ userData: response });
-};
-
-const fetchUserData = () =>
-{
-    try
-    {
-        chrome.runtime.sendMessage(
-            { action: "fetchUserData" },
-            function (response)
-            {
-                if (chrome.runtime.lastError)
-                {
-                    console.error(
-                        "Error with the extension context: ",
-                        chrome.runtime.lastError
-                    );
-                } else if (response.error)
-                {
-                    console.error(response.error);
-                    userData = null;
-                } else
-                {
-                    userData = response;
-                    chrome.storage.sync.set({ userData: response });
-                    checkStorage(response);
-                }
-            }
-        );
-    } catch (error)
-    {
-        console.error("Failed to send message to background script: ", error);
-    }
-};
-
-fetchUserData();
-
-// Listen for changes in chrome storage
-chrome.storage.onChanged.addListener((changes, areaName) =>
-{
-    if (areaName === "sync" && changes.userData)
-    {
-        userData = changes.userData.newValue;
-        if (changes?.userData?.oldValue?.message === "Unauthorized")
-        {
-            //Set Toggle To true
-            if (changes?.userData?.newValue?.stripeSubscriptionId)
-            {
-                chrome.storage.local.set({ format: true }, () =>
-                {
-                    console.log("Format toggle set to true due to subscription.");
-                });
-            } else
-            {
-                //Set Toggle To false
-                chrome.storage.local.set({ format: false }, () =>
-                {
-                    console.log("Format toggle set to false due to no subscription.");
-                });
-            }
-
-            chrome.storage.local.get(
-                [
-                    "lastLoggedInUser",
-                    "recentlyCopiedItems",
-                    "recentlyCopiedLogoutItems",
-                ],
-                async function (result)
-                {
-                    let itemsrecentlyCopiedItems = result?.recentlyCopiedItems || "[]";
-                    itemsrecentlyCopiedItems = Array.from(
-                        JSON.parse(itemsrecentlyCopiedItems)
-                    );
-                    if (
-                        itemsrecentlyCopiedItems?.some((i) => i?.email == userData?.email)
-                    )
-                    {
-                        return;
-                    } else
-                    {
-                        let items = result?.recentlyCopiedLogoutItems || "[]";
-                        items = Array.from(JSON.parse(items));
-                        if (changes.userData.newValue.loginCount === 1)
-                        {
-                            await chrome.storage.local.set({
-                                recentlyCopiedItems: JSON.stringify([
-                                    ...itemsrecentlyCopiedItems,
-                                    ...items.map((i) => ({
-                                        ...i,
-                                        email: userData?.email,
-                                        isLogout: false,
-                                    })),
-                                ]),
-                            });
-                        }
-                    }
-                }
-            );
-        } else
-        {
-            //set false here to toggle
-            chrome.storage.local.get(
-                [
-                    "lastLoggedInUser",
-                    "recentlyCopiedItems",
-                    "recentlyCopiedLogoutItems",
-                ],
-                async function (result)
-                {
-                    let items = result?.recentlyCopiedItems || "[]";
-                    items = Array.from(JSON.parse(items));
-
-                    const newLogOutArray = items.filter(
-                        (i) => i?.email == changes?.userData?.oldValue?.email
-                    );
-                    const sortedData = newLogOutArray.sort((a, b) =>
-                    {
-                        if (b.starred && !a.starred) return 1; // Starred items should come before unstarred items
-                        if (!b.starred && a.starred) return -1; // Starred items should come before unstarred items
-                        if (a.starred && b.starred)
-                            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among starred items, sort by most recent
-                        if (!a.starred && !b.starred)
-                            return b.lastModifiedTimestamp - a.lastModifiedTimestamp; // Among unstarred items, sort by most recent
-                        return b.id - a.id; // Default fallback (should not be reached)
-                    });
-
-                    // Pick the latest 5 elements
-                    const latestFiveElements = sortedData
-                        .slice(0, 5)
-                        .map((l) => ({ ...l, isLogout: true, email: null }));
-                    await chrome.storage.local.set({
-                        recentlyCopiedLogoutItems: JSON.stringify(latestFiveElements),
-                    });
-                }
-            );
-        }
-    }
-});
 
 const renderPopup = (target) =>
 {
@@ -653,7 +497,6 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy)
     chrome.storage.local.get(["lastLoggedInUser"], function (result)
     {
         const lastUserEmail = result.lastLoggedInUser;
-        const userEmail = userData?.email || null;
 
         // Function to count words in a string, excluding spaces and newlines
         function countWords(text)
@@ -695,11 +538,12 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy)
             ["recentlyCopiedItems", "recentlyCopiedLogoutItems"],
             async (result) =>
             {
-                let items = userData?.email
-                    ? result?.recentlyCopiedItems || "[]"
-                    : result?.recentlyCopiedLogoutItems || "[]";
+                // let items = userData?.email
+                //     ? result?.recentlyCopiedItems || "[]"
+                //     : result?.recentlyCopiedLogoutItems || "[]";
+                let items = result?.recentlyCopiedLogoutItems || "[]";
                 items = Array.from(JSON.parse(items));
-                const maxItems = userData?.email && 15;
+                const maxItems = 15;
 
                 if (selectedText === "" && !hasText) return;
                 const maxWords = 5000;
@@ -721,21 +565,19 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy)
                     lastModifiedTimestamp: new Date().getTime(),
                     text: textToCopy,
                     starred: false,
-                    email: userEmail,
-                    isLogout: userData?.message === "Unauthorized" ? true : false,
+                    // email: "user@gmail.com",
+                    // isLogout: true,
                 };
                 items.unshift(newItem);
 
                 if (
-                    items.filter((item) => item.email === userEmail || !item.email)
-                        .length > maxItems
+                    items.length > maxItems
                 )
                 {
                     let unstarredIndex = -1;
                     for (let i = items.length - 1; i >= 0; i--)
                     {
                         if (
-                            (items[i].email === userEmail || !items[i].email) &&
                             !items[i].starred
                         )
                         {
@@ -752,21 +594,17 @@ async function saveCopiedText(hasText = "", target, format, useStandardCopy)
                     }
                 }
                 let storageCopyArrayName = "recentlyCopiedLogoutItems";
-                if (userData?.email)
-                {
-                    storageCopyArrayName = "recentlyCopiedItems";
-                }
+                // if (userData?.email)
+                // {
+                //     storageCopyArrayName = "recentlyCopiedItems";
+                // }
                 await chrome.storage.local.set({
                     [storageCopyArrayName]: JSON.stringify(items),
                 });
 
                 try
                 {
-                    // TODO: confirm if this is needed
-                    //   if ((useStandardCopy && !isSubscribed) || isTextTruncated) {
-                    //     // Copy the full text to the clipboard
-                    //     await navigator.clipboard.writeText(hasText || selectedText);
-                    //   } else 
+
                     if (format)
                     {
                         const selection = window.getSelection();

@@ -52,7 +52,7 @@ const mimeTypes = {
     xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
-function Actions({ text, index, starred, toggleStar, showActions, userData })
+function Actions({ text, index, starred, toggleStar, showActions })
 {
     const storage = new Storage({ area: "local" });
     let [extension] = useStorage({ key: "extension", instance: storage });
@@ -203,60 +203,34 @@ startxref
             ["recentlyCopiedItems", "recentlyCopiedLogoutItems"],
             (result) =>
             {
-                let items = userData?.email
-                    ? result.recentlyCopiedItems
-                        ? JSON.parse(result.recentlyCopiedItems)
-                        : []
-                    : result.recentlyCopiedLogoutItems
-                        ? JSON.parse(result.recentlyCopiedLogoutItems)
-                        : [];
+                // let items = userData?.email
+                //     ? result.recentlyCopiedItems
+                //         ? JSON.parse(result.recentlyCopiedItems)
+                //         : []
+                //     : result.recentlyCopiedLogoutItems
+                //         ? JSON.parse(result.recentlyCopiedLogoutItems)
+                //         : [];
+                let items = result.recentlyCopiedLogoutItems
+                    ? JSON.parse(result.recentlyCopiedLogoutItems)
+                    : [];
                 // Find index of item with matching id
                 const indexToRemove = items.findIndex((item) => item.id === idToRemove);
                 let storageCopyArrayName = "recentlyCopiedLogoutItems";
-                if (userData?.email)
-                {
-                    storageCopyArrayName = "recentlyCopiedItems";
-                }
+
                 if (indexToRemove !== -1)
                 {
                     const itemToRemove = items[indexToRemove];
-                    if (itemToRemove.isLogout)
-                    {
-                        // Only remove if isLogout is true
-                        items.splice(indexToRemove, 1); // Remove item from array
+                    // If user is logged in and trying to remove an item copied while logged in
+                    items.splice(indexToRemove, 1); // Remove item from array
+                    chrome.storage.local.set({
+                        [storageCopyArrayName]: JSON.stringify(items),
+                    });
 
-                        chrome.storage.local.set({
-                            [storageCopyArrayName]: JSON.stringify(items),
-                        });
-
-                        setToolTip("Removed!");
-                        setTimeout(() =>
-                        {
-                            setToolTip("");
-                        }, 500);
-                    } else if (!userData?.email)
+                    setToolTip("Removed!");
+                    setTimeout(() =>
                     {
-                        // Provide feedback if trying to remove an item copied while logged in
-                        setToolTip("Cannot remove item!");
-                        setShowConfirm(false);
-                        setTimeout(() =>
-                        {
-                            setToolTip("");
-                        }, 2000);
-                    } else
-                    {
-                        // If user is logged in and trying to remove an item copied while logged in
-                        items.splice(indexToRemove, 1); // Remove item from array
-                        chrome.storage.local.set({
-                            [storageCopyArrayName]: JSON.stringify(items),
-                        });
-
-                        setToolTip("Removed!");
-                        setTimeout(() =>
-                        {
-                            setToolTip("");
-                        }, 500);
-                    }
+                        setToolTip("");
+                    }, 500);
                 }
             }
         );

@@ -4,10 +4,8 @@ import { useStorage } from "@plasmohq/storage/hook";
 import ReactToolTip from "./ReactToolTip";
 
 function Header({
-    userData,
     selectedKeyCombination,
     handleKeyCombinationChange,
-    setLastLoggdInUser,
 })
 {
     const storage = new Storage({ area: "local" });
@@ -105,34 +103,6 @@ function Header({
         setDropdownOpen((prevState) => !prevState);
     };
 
-    const handleLogout = async () =>
-    {
-        setLastLoggdInUser(userData.email);
-        setLastLoggedInUser(userData.email);
-        try
-        {
-            const res = await fetch(
-                "https://www.copyin2clicks.com/api/auth/signout?callbackUrl=/api/auth/session",
-                {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    body: await fetch("https://www.copyin2clicks.com/api/auth/csrf").then(
-                        (rs) => rs.text()
-                    ),
-                }
-            );
-            if (res)
-            {
-                openPremiumTab("https://www.copyin2clicks.com/login");
-            }
-        } catch (err)
-        {
-            console.log("Failed to logout");
-        }
-    };
     const handleFormattingChange = () =>
     {
         setFormat((prev) =>
@@ -190,15 +160,6 @@ function Header({
         });
     }, []);
 
-    // useEffect(() =>
-    // {
-    //     if (!userData?.stripeSubscriptionId)
-    //     {
-    //         setFormat(false);
-    //         setIsPopupon(true)
-    //     }
-    // }, [userData]);
-
     const handleClickOutside = (event) =>
     {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target))
@@ -226,12 +187,6 @@ function Header({
     return (
         <>
             <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
-                {/* <div
-                    onClick={redirectToPremium}
-                    className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-                >
-                    {userData?.stripeSubscriptionId ? "Manage Subscription" : "Upgrade"}
-                </div> */}
                 <div
                     className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
                     id="CopyIn2Clicks-title"
@@ -247,26 +202,6 @@ function Header({
                 />
 
                 <div className="flex justify-center items-center gap-2">
-                    <div className="">
-                        {userData.name ? (
-                            <div
-                                className="inline-flex items-center justify-center w-8 h-8 cursor-pointer overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600"
-                                onClick={handleProfiletoggle}
-                            >
-                                <span className="font-medium text-gray-600 dark:text-gray-300">
-                                    {userData?.name?.substring(0, 2).toUpperCase()}
-                                </span>
-                            </div>
-                        ) : (
-                            <div
-                                onClick={redirectToLogin}
-                                className="p-1 rounded font-bold text-white border transition ease-in-out duration-300 hover:bg-gray-700 hover:shadow-md cursor-pointer"
-                            >
-                                Login
-                            </div>
-                        )}
-                    </div>
-
                     <div className="relative">
                         <button
                             id="setting-ext-icon"
@@ -352,36 +287,7 @@ function Header({
                             </div>
                         )}
                     </div>
-                    {profiledropdown && (
-                        <div
-                            className="absolute right-10 top-12 bg-white rounded-md shadow-lg text-black"
-                            ref={profileDropdownRef}
-                        >
-                            <div className="py-2">
-                                <div className="flex justify-start px-2">
-                                    <div className="text-sm font-bold pl-1">{userData?.name}</div>
-                                </div>
-                                <div className="flex justify-start px-2">
-                                    <div className="text-xs text-gray-600 p-1">
-                                        {userData?.email}
-                                    </div>
-                                </div>
-                                <hr className="mt-1" />
-                                <div
-                                    className="flex justify-start cursor-pointer px-2 mt-1 hover:bg-gray-100"
-                                    onClick={redirectToPremium}
-                                >
-                                    <div className="text-sm cursor-pointer p-1">Subscription</div>
-                                </div>
-                                <div
-                                    className="flex justify-start cursor-pointer px-2 hover:bg-gray-100"
-                                    onClick={handleLogout}
-                                >
-                                    <div className="text-sm cursor-pointer p-1">Logout</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+
                 </div>
             </div>
             {showError && (
