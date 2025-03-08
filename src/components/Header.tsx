@@ -26,7 +26,7 @@ function Header({
     );
     const [isPopupon, setIsPopupon] = useStorage(
         { key: "isPopupon", instance: new Storage({ area: "local" }) },
-        true
+        false
     );
     const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
         key: "lastLoggedInUser",
@@ -155,7 +155,7 @@ function Header({
                 setIsPopupon(result);
             } else
             {
-                setIsPopupon(true);
+                setIsPopupon(false);
             }
         });
     }, []);

@@ -1,6 +1,6 @@
 chrome.runtime.onInstalled.addListener(() =>
 {
-    chrome.storage.local.set({ isOn: true, isPopupon: true });
+    chrome.storage.local.set({ isOn: true, isPopupon: false });
     chrome.tabs.query({}, (tabs) =>
     {
         for (const tab of tabs)
