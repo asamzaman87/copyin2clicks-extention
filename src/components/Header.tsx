@@ -26,7 +26,7 @@ function Header({
     );
     const [isPopupon, setIsPopupon] = useStorage(
         { key: "isPopupon", instance: new Storage({ area: "local" }) },
-        true
+        false
     );
     const [lastLoggedInUser, setLastLoggedInUser] = useStorage({
         key: "lastLoggedInUser",
@@ -155,7 +155,7 @@ function Header({
                 setIsPopupon(result);
             } else
             {
-                setIsPopupon(true);
+                setIsPopupon(false);
             }
         });
     }, []);
@@ -186,7 +186,7 @@ function Header({
 
     return (
         <>
-            <div className="p-2 bg-slate-900 text-white flex justify-between items-center">
+            <div className="p-2 bg-slate-900 text-white flex justify-center items-center">
                 <div
                     className="text-2xl font-bold title cursor-pointer hover:scale-110  active:scale-95 transition-all duration-100"
                     id="CopyIn2Clicks-title"
@@ -201,7 +201,7 @@ function Header({
                     place="bottom"
                 />
 
-                <div className="flex justify-center items-center gap-2">
+                <div className="flex justify-center items-center gap-2 absolute right-2">
                     <div className="relative">
                         <button
                             id="setting-ext-icon"
