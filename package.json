@@ -1,8 +1,8 @@
 {
 	"name": "copyin2clicks",
-	"displayName": "CopyIn2Clicks: Click, Click & You're Done",
-	"version": "1.1.0",
-	"description": "Elevate your productivity with CopyIn2Clicks. Effortlessly copy and manage text from any website with advanced features.",
+	"displayName": "CopyIn2Clicks: Clipboard History & Text Saver",
+	"version": "1.1.2",
+	"description": "Effortlessly save, manage, and retrieve clipboard or copy history. Boost productivity by copying texts in just two clicks!",
 	"author": "Asam Zaman",
 	"scripts": {
 		"dev": "plasmo dev",
